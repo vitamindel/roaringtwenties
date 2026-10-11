@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The Normalcy Files — America, 1920–1929</title>
+  <meta name="description" content="A playable pixel-art history museum about the Roaring Twenties and America's return to normalcy.">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Game world. Use WASD or arrow keys to move, E or Space to interact."></canvas>
+
+    <!-- ===== HUD ===== -->
+    <header id="hud" hidden>
+      <div class="hud-card">
+        <canvas id="hud-portrait" width="18" height="16" aria-hidden="true"></canvas>
+        <div class="hud-text">
+          <div class="hud-room" id="hud-room">Town Square</div>
+          <div class="hud-stats" id="hud-stats">Exhibits 0/6</div>
+          <div class="hud-bar"><span id="hud-bar-fill"></span></div>
+        </div>
+      </div>
+      <div class="hud-guide" id="hud-guide" hidden></div>
+      <nav class="hud-buttons" aria-label="Game menu">
+        <button class="icon-btn" id="btn-narr" title="Room narration (N)" aria-label="Room narration"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor"/><path d="M11 5h1v6h-1zM13 3h1v10h-1z" fill="currentColor"/></svg><span>N</span></button>
+        <button class="icon-btn" id="btn-map" title="Map & room directory (M)" aria-label="Map"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M1 3l4-1 6 2 4-1v11l-4 1-6-2-4 1z M5 2v11 M11 4v11" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><span>M</span></button>
+        <button class="icon-btn" id="btn-help" title="Controls & help (H)" aria-label="Help"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M5 4h1V3h4v1h1v3h-1v1H9v2H7V7h1V6h1V5H7v1H5z M7 11h2v2H7z" fill="currentColor"/></svg><span>H</span></button>
+        <button class="icon-btn" id="btn-pause" title="Pause & settings (Esc)" aria-label="Pause and settings"><svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path d="M7 1h2v2h2V2h1v2h1v1h-1v2h2v2h-2v2h1v1h-1v1h-1v-1H9v2H7v-2H5v1H4v-1H3v-1h1V9H2V7h2V5H3V4h1V3h1v1h2z M6 6v4h4V6z" fill="currentColor"/></svg><span>Esc</span></button>
+      </nav>
+    </header>
+
+    <div id="prompt" class="prompt" hidden></div>
+    <div id="captions" class="captions" aria-live="polite" hidden></div>
+
+    <!-- ===== Narration panel ===== -->
+    <section id="narr" class="narr" hidden aria-label="Room narration player">
+      <div class="narr-head">
+        <span class="narr-kicker">Room Narration</span>
+        <button class="x-btn" id="narr-close" aria-label="Close narration panel">×</button>
+      </div>
+      <div class="narr-title" id="narr-title">—</div>
+      <div class="narr-mode" id="narr-mode"></div>
+      <div class="narr-row">
+        <button class="deco-btn small" id="narr-play" aria-label="Play or pause">▶ Play</button>
+        <button class="deco-btn small ghost" id="narr-replay" aria-label="Replay from start">↺</button>
+        <div class="narr-progress" id="narr-progress" role="slider" aria-label="Narration progress" tabindex="0"><span id="narr-fill"></span></div>
+        <span class="narr-time" id="narr-time">0:00</span>
+      </div>
+      <div class="narr-row">
+        <label class="narr-vol">Voice <input type="range" id="narr-vol" min="0" max="1" step="0.05" value="1"></label>
+        <button class="deco-btn small ghost" id="narr-cc" aria-pressed="true">CC</button>
+        <button class="deco-btn small ghost" id="narr-transcript">Transcript</button>
+      </div>
+    </section>
+
+    <!-- ===== Touch controls ===== -->
+    <div id="touch" hidden>
+      <div class="dpad" id="dpad"><span class="dpad-knob" id="dpad-knob"></span></div>
+      <button class="touch-a" id="touch-a" aria-label="Interact">E</button>
+    </div>
+
+    <div id="toasts" aria-live="polite"></div>
+    <div id="titlecard" class="titlecard" hidden></div>
+    <div id="fade"></div>
+    <div id="modal-root"></div>
+
+    <!-- ===== Title screen / help desk ===== -->
+    <section id="title-screen" aria-label="Welcome screen">
+      <canvas id="skyline" aria-hidden="true"></canvas>
+      <div class="ts-inner">
+        <div class="ts-kicker">America &nbsp;·&nbsp; 1920 – 1929</div>
+        <h1 class="ts-title"><span>THE</span> NORMALCY FILES</h1>
+        <p class="ts-sub">A journey through America’s search for stability after World War I</p>
+        <div class="video-frame" id="video-frame">
+          <div class="video-corner tl"></div><div class="video-corner tr"></div><div class="video-corner bl"></div><div class="video-corner br"></div>
+          <div class="video-label">Help Desk · Watch this first</div>
+          <div class="video-box">
+            <video id="helpdesk" preload="metadata" playsinline>
+              <track kind="captions" srclang="en" label="English" id="helpdesk-track">
+            </video>
+            <div class="video-placeholder" id="video-placeholder" hidden>
+              <canvas id="projector" width="160" height="90"></canvas>
+              <div class="vp-text">
+                <strong>Help-desk video coming soon</strong>
+                <span>Drop your recording at <code>media/video/helpdesk.mp4</code>. Until then, play a narrated preview of the script.</span>
+              </div>
+            </div>
+            <button class="video-play" id="video-play" aria-label="Play the help-desk video"><span></span></button>
+            <div class="video-captions" id="video-captions" hidden></div>
+          </div>
+          <div class="video-tools">
+            <button class="link-btn" id="video-transcript">Read transcript</button>
+            <span class="dot">◆</span>
+            <button class="link-btn" id="video-cc" aria-pressed="true">Captions on</button>
+          </div>
+        </div>
+        <button class="deco-btn big" id="enter-btn">Enter the Museum</button>
+        <button class="link-btn skip" id="skip-btn">Skip introduction ›</button>
+        <p class="ts-question"><em>The central question:</em> Did America’s return to normalcy restore stability after World War I — or did it conceal deeper problems?</p>
+      </div>
+      <div class="ts-loading" id="ts-loading">Loading the town…</div>
+    </section>
+
+    <noscript><div class="noscript">This museum is a game and needs JavaScript turned on.</div></noscript>
+  </div>
+
+  <script src="js/content.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/artifacts.js"></script>
+  <script src="js/minigames.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
