@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>The Normalcy Files — America, 1920–1929</title>
+  <title>The Normalcy Files: America, 1920–1929</title>
   <meta name="description" content="A playable pixel-art history museum about the Roaring Twenties and America's return to normalcy.">
   <link rel="stylesheet" href="css/fonts.css">
   <link rel="stylesheet" href="css/style.css">
@@ -19,6 +19,7 @@
         <div class="hud-text">
           <div class="hud-room" id="hud-room">Town Square</div>
           <div class="hud-stats" id="hud-stats">Exhibits 0/6</div>
+          <div class="hud-objective" id="hud-objective"></div>
           <div class="hud-bar"><span id="hud-bar-fill"></span></div>
         </div>
       </div>
@@ -40,7 +41,7 @@
         <span class="narr-kicker">Room Narration</span>
         <button class="x-btn" id="narr-close" aria-label="Close narration panel">×</button>
       </div>
-      <div class="narr-title" id="narr-title">—</div>
+      <div class="narr-title" id="narr-title"></div>
       <div class="narr-mode" id="narr-mode"></div>
       <div class="narr-row">
         <button class="deco-btn small" id="narr-play" aria-label="Play or pause">▶ Play</button>
@@ -75,7 +76,7 @@
         <p class="ts-sub">A journey through America’s search for stability after World War I</p>
         <div class="video-frame" id="video-frame">
           <div class="video-corner tl"></div><div class="video-corner tr"></div><div class="video-corner bl"></div><div class="video-corner br"></div>
-          <div class="video-label">Help Desk · Watch this first</div>
+          <div class="video-label">Help desk: watch this first</div>
           <div class="video-box">
             <video id="helpdesk" preload="metadata" playsinline>
               <track kind="captions" srclang="en" label="English" id="helpdesk-track">
@@ -98,7 +99,7 @@
         </div>
         <button class="deco-btn big" id="enter-btn">Enter the Museum</button>
         <button class="link-btn skip" id="skip-btn">Skip introduction ›</button>
-        <p class="ts-question"><em>The central question:</em> Did America’s return to normalcy restore stability after World War I — or did it conceal deeper problems?</p>
+        <p class="ts-question"><em>The central question:</em> Did America’s return to normalcy restore stability after World War I, or did it conceal deeper problems?</p>
       </div>
       <div class="ts-loading" id="ts-loading">Loading the town…</div>
     </section>

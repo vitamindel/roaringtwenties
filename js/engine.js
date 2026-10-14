@@ -1,5 +1,5 @@
 /* =====================================================================
-   THE NORMALCY FILES — engine.js
+   THE NORMALCY FILES: engine.js
    Game loop, input, player movement, collision, camera, NPCs, traffic,
    the passing train, lighting and room transitions. Also: save state.
    ===================================================================== */
@@ -69,6 +69,7 @@
       this.sparkles = [0, 1, 2, 3, 4, 5].map((i) => A.sparkle(i));
       this.starIcon = this.makeStar();
       this.bubble = this.makeBubble();
+      this.seenIcon = (() => { const c = A.canvas(7, 7); A.text(c.g, '✓', 1, 1, '#bfe8a8', 1); A.outline(c); return c; })();
       this.arrowIcon = this.makeArrow();
       this.setMap('town', this.maps.town.spawn);
       let last = performance.now();
@@ -164,7 +165,7 @@
       const p = this.player;
       p.x = spawn.x; p.y = spawn.y; p.dir = spawn.dir || 0;
       this.snapCamera();
-      if (NF.Audio) NF.Audio.setScene(this.map.music, this.map.ambience);
+      if (NF.Audio) NF.Audio.setScene(this.map.id, this.map.ambience);
       if (NF.UI && NF.UI.C) NF.UI.onMapChange(this.map);
     },
     snapCamera() {
@@ -421,6 +422,7 @@
           if (a > 0.8) { ctx.fillStyle = 'rgba(255,230,140,0.25)'; ctx.fillRect(Math.round(x) - 1, Math.round(y), 3, 1); ctx.fillRect(Math.round(x), Math.round(y) - 1, 1, 3); }
         }
       }
+      this.drawDoorLabels(ctx, cx, cy);
       this.drawIndicators(ctx, cx, cy);
       this.drawGuideArrow(ctx, cx, cy);
       // vignette
@@ -432,6 +434,31 @@
       }
       ctx.drawImage(this.vig, 0, 0);
     },
+    // Name plates over every exhibit door, with a check mark once visited
+    drawDoorLabels(ctx, cx, cy) {
+      const m = this.map;
+      if (!m.labels || !m.labels.length) return;
+      this.labelCache = this.labelCache || {};
+      for (const lb of m.labels) {
+        const r = NF.CONTENT.ROOMS[lb.room];
+        const seen = !!Save.data.visited[lb.room];
+        const key = lb.room + (seen ? '1' : '0');
+        if (!this.labelCache[key]) {
+          const top = r.num <= 6 ? 'EXHIBIT ' + r.num : r.building.toUpperCase();
+          const bottom = (r.num <= 6 ? r.short : lb.room === 'court' ? 'FINAL VERDICT' : 'SOURCES & CREDITS').toUpperCase().replace(/[’']/g, "'");
+          const t1 = seen ? top + ' ✓' : top;
+          const w = Math.max(A.textWidth(t1), A.textWidth(bottom)) + 10;
+          const c = A.canvas(w, 18);
+          A.R(c.g, 0, 0, w, 18, '#2a1a12'); A.R(c.g, 1, 1, w - 2, 16, seen ? '#2c4a3e' : '#3a2a40'); A.R(c.g, 1, 1, w - 2, 1, '#e2b85a');
+          A.textC(c.g, t1, w / 2, 3, seen ? '#bfe8a8' : '#f3d58a', 1);
+          A.textC(c.g, bottom, w / 2, 10, '#f4ead2', 1);
+          this.labelCache[key] = c;
+        }
+        const c = this.labelCache[key];
+        const x = Math.round(lb.x - c.width / 2 - cx), y = Math.round(lb.y - c.height - cy);
+        if (x > -c.width && y > -20 && x < this.view.w && y < this.view.h) ctx.drawImage(c, x, y);
+      }
+    },
     drawChar(ctx, ch, cx, cy, isPlayer) {
       const sheet = isPlayer ? this.playerSheet : ch.sheet;
       const x = Math.round(ch.x - 9 - cx), y = Math.round(ch.y - 25 - cy);
@@ -440,11 +467,12 @@
       ctx.drawImage(sheet, ch.frame * A.FW, ch.dir * A.FH, A.FW, A.FH, x, y, A.FW, A.FH);
     },
     drawFlow(ctx, o, cx, cy) {
-      const pts = { us: [o.x + o.w * 0.2, o.y + o.h * 0.32], de: [o.x + o.w * 0.52, o.y + o.h * 0.24], al: [o.x + o.w * 0.47, o.y + o.h * 0.34] };
-      const paths = [['us', 'de', '#f2c14a'], ['de', 'al', '#e86a5a'], ['al', 'us', '#6ab0e8']];
+      const P = o.pts || { us: [0.2, 0.36], de: [0.9, 0.38], al: [0.71, 0.5] };
+      const pts = {}; Object.keys(P).forEach((k) => { pts[k] = [o.x + o.w * P[k][0], o.y + o.h * P[k][1]]; });
+      const paths = [['us', 'de', '#f2c14a'], ['de', 'al', '#e86a5a'], ['al', 'us', '#4a7ab0']];
       paths.forEach(([a, b, col], i) => {
         const [x1, y1] = pts[a], [x2, y2] = pts[b];
-        const mx = (x1 + x2) / 2, my = Math.min(y1, y2) - 10 - i * 3;
+        const mx = (x1 + x2) / 2, my = i === 2 ? Math.max(y1, y2) + 8 : Math.min(y1, y2) - 8;
         for (let k = 0; k < 4; k++) {
           const t = ((this.t * 0.35 + k / 4 + i * 0.13) % 1);
           const x = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * mx + t * t * x2;
@@ -498,6 +526,8 @@
         if (it.kind === 'artifact' && !Save.data.examined[it.id]) {
           const sp = this.sparkles[Math.floor(this.t * 6 + it.x) % 6];
           ctx.drawImage(sp, x - 4, y - 44 + bob);
+        } else if (it.kind === 'artifact') {
+          ctx.globalAlpha = 0.75; ctx.drawImage(this.seenIcon, x - 3, y - 40); ctx.globalAlpha = 1;
         } else if (it.kind === 'game') {
           const done = Save.data.games[it.id];
           ctx.globalAlpha = done ? 0.55 : 1;
@@ -509,7 +539,10 @@
         }
       }
       for (const n of this.npcs) {
-        if (this.near && this.near.kind === 'npc' && this.near.npc === n) ctx.drawImage(this.bubble, Math.round(n.x - cx) - 5, Math.round(n.y - cy) - 40 + bob);
+        const near = this.near && this.near.kind === 'npc' && this.near.npc === n;
+        ctx.globalAlpha = near ? 1 : 0.7;
+        ctx.drawImage(this.bubble, Math.round(n.x - cx) - 5, Math.round(n.y - cy) - 40 + (near ? bob : 0));
+        ctx.globalAlpha = 1;
       }
       // highlight current interactable
       const nr = this.near;
@@ -529,7 +562,9 @@
       const onScreen = sx > 10 && sx < v.w - 10 && sy > 10 && sy < v.h - 10;
       const bob = Math.round(Math.sin(this.t * 5) * 2);
       if (onScreen) {
-        ctx.save(); ctx.translate(Math.round(sx), Math.round(sy) - 48 + bob); ctx.rotate(Math.PI); ctx.drawImage(this.arrowIcon, -6, -6); ctx.restore();
+        const lb = (this.map.labels || []).find((l) => l.room === tgt);
+        const ay = lb ? lb.y - 18 - cy - 10 : sy - 48;
+        ctx.save(); ctx.translate(Math.round(sx), Math.round(ay) + bob); ctx.rotate(Math.PI); ctx.drawImage(this.arrowIcon, -6, -6); ctx.restore();
       } else {
         const px = this.player.x - cx, py = this.player.y - cy;
         const ang = Math.atan2(sy - py, sx - px);

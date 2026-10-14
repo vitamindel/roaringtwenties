@@ -1,64 +1,67 @@
 /* =====================================================================
-   THE NORMALCY FILES — audio.js
-   Everything you hear (except your narration and the archival Harding
-   recording) is synthesized live with the Web Audio API: an original
-   1920s-flavoured chiptune score, ambience, and sound effects.
-   No copyrighted recordings are used.
+   THE NORMALCY FILES: audio.js
+   Background music: genuine public-domain jazz recordings (1920–1924),
+   one track per area, listed in content.js (MUSIC). Tracks never
+   overlap: the old one fades out and stops before the next one starts.
+   Ambience and sound effects are synthesized live with the Web Audio API.
    ===================================================================== */
 (function () {
   'use strict';
   const NF = (window.NF = window.NF || {});
 
-  const NOTE = (n) => 440 * Math.pow(2, (n - 69) / 12); // MIDI → Hz
-
-  // Chord = [root midi, quality]; progressions in a ragtime/parlour style (original)
-  const SCORES = {
-    town: { bpm: 104, swing: 0.16, prog: [[53, 'M'], [53, 'M'], [50, '7'], [50, '7'], [55, '7'], [55, '7'], [48, '7'], [48, '7'], [53, 'M'], [57, '7'], [58, 'M'], [59, 'd'], [53, 'M'], [50, '7'], [55, '7'], [48, '7']], lead: 0.07, style: 'stride' },
-    interior: { bpm: 84, swing: 0.1, prog: [[48, 'M'], [45, 'm'], [50, 'm'], [43, '7'], [48, 'M'], [52, 'm'], [50, '7'], [43, '7']], lead: 0.05, style: 'waltzless' },
-    tense: { bpm: 76, swing: 0.05, prog: [[45, 'm'], [45, 'm'], [41, 'M'], [40, '7'], [45, 'm'], [50, 'm'], [40, '7'], [40, '7']], lead: 0.045, style: 'pulse' },
-    grand: { bpm: 96, swing: 0.0, prog: [[50, 'M'], [55, 'M'], [57, '7'], [50, 'M'], [47, 'm'], [52, 'm'], [45, '7'], [50, 'M']], lead: 0.055, style: 'march' },
-    reflective: { bpm: 70, swing: 0.0, prog: [[51, 'M'], [48, 'm'], [44, 'M'], [46, '7'], [51, 'M'], [55, 'm'], [44, 'M'], [46, '7']], lead: 0.045, style: 'arp' },
-  };
-  const QUAL = { M: [0, 4, 7], m: [0, 3, 7], '7': [0, 4, 7, 10], d: [0, 3, 6] };
+  const NOTE = (n) => 440 * Math.pow(2, (n - 69) / 12); // MIDI to Hz
 
   const Audio = (NF.Audio = {
-    ctx: null, ready: false, scene: null, amb: null,
-    vol: { music: 0.45, sfx: 0.7, ambience: 0.5, voice: 1 },
+    ctx: null, ready: false, amb: null,
+    vol: { music: 0.4, sfx: 0.7, ambience: 0.45, voice: 1 },
+    musicOn: true, duck: 1, trackKey: null, el: null,
 
     init() {
       const s = NF.Save.data.settings;
       ['music', 'sfx', 'ambience', 'voice'].forEach((k) => { if (typeof s[k] === 'number') this.vol[k] = s[k]; });
+      if (s.musicOn === false) this.musicOn = false;
     },
     unlock() {
-      if (this.ready) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        this.ctx = new AC();
-        const c = this.ctx;
-        this.master = c.createGain(); this.master.gain.value = 0.9; this.master.connect(c.destination);
-        this.musicBus = c.createGain(); this.sfxBus = c.createGain(); this.ambBus = c.createGain();
-        const comp = c.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3; comp.connect(this.master);
-        // gentle low-pass "old radio" warmth on the music
-        this.musicLP = c.createBiquadFilter(); this.musicLP.type = 'lowpass'; this.musicLP.frequency.value = 3200;
-        this.musicBus.connect(this.musicLP); this.musicLP.connect(comp);
-        this.sfxBus.connect(comp); this.ambBus.connect(comp);
-        this.noise = this.makeNoise();
-        this.ready = true;
-        this.applyVolumes();
-        if (this.pendingScene) this.setScene(...this.pendingScene);
-      } catch (e) { this.ready = false; }
+      this.unlocked = true;
+      if (this.ready) { if (this.ctx.state === 'suspended') this.ctx.resume(); }
+      else {
+        try {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) {
+            this.ctx = new AC();
+            const c = this.ctx;
+            this.master = c.createGain(); this.master.gain.value = 0.9; this.master.connect(c.destination);
+            this.sfxBus = c.createGain(); this.ambBus = c.createGain();
+            const comp = c.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3; comp.connect(this.master);
+            this.sfxBus.connect(comp); this.ambBus.connect(comp);
+            this.noise = this.makeNoise();
+            this.ready = true;
+          }
+        } catch (e) { this.ready = false; }
+      }
+      this.applyVolumes();
+      if (this.pendingScene) { const p = this.pendingScene; this.pendingScene = null; this.setScene(p[0], p[1]); }
     },
     applyVolumes() {
-      if (!this.ready) return;
-      const t = this.ctx.currentTime;
-      this.musicBus.gain.setTargetAtTime(this.vol.music * 0.5 * (this.duck || 1), t, 0.1);
-      this.sfxBus.gain.setTargetAtTime(this.vol.sfx * 0.8, t, 0.05);
-      this.ambBus.gain.setTargetAtTime(this.vol.ambience * 0.6 * (this.duck || 1), t, 0.1);
+      if (this.ready) {
+        const t = this.ctx.currentTime;
+        this.sfxBus.gain.setTargetAtTime(this.vol.sfx * 0.8, t, 0.05);
+        this.ambBus.gain.setTargetAtTime(this.vol.ambience * 0.6 * this.duck, t, 0.1);
+      }
+      if (this.el && !this.fading) this.el.volume = this.musicTarget();
     },
-    setVolume(k, v) { this.vol[k] = v; NF.Save.data.settings[k] = v; NF.Save.save(); this.applyVolumes(); if (k === 'voice' && NF.UI) NF.UI.setVoiceVolume(v); },
-    // Lower music/ambience while narration plays
-    setDuck(on) { this.duck = on ? 0.3 : 1; this.applyVolumes(); },
+    musicTarget() { return this.musicOn ? Math.max(0, Math.min(1, this.vol.music * 0.7 * this.duck)) : 0; },
+    setVolume(k, v) {
+      this.vol[k] = v; NF.Save.data.settings[k] = v; NF.Save.save(); this.applyVolumes();
+      if (k === 'voice' && NF.UI) NF.UI.setVoiceVolume(v);
+    },
+    setMusicOn(on) {
+      this.musicOn = on; NF.Save.data.settings.musicOn = on; NF.Save.save();
+      if (!on) this.stopTrack();
+      else if (this.wantKey) this.playTrack(this.wantKey);
+    },
+    // Lower music and ambience while narration or an archival recording plays
+    setDuck(on) { this.duck = on ? 0.25 : 1; this.applyVolumes(); },
 
     makeNoise() {
       const c = this.ctx, len = c.sampleRate * 2;
@@ -67,82 +70,46 @@
       return b;
     },
 
-    /* ---------------- music sequencer ---------------- */
-    setScene(music, ambience) {
-      if (!this.ready) { this.pendingScene = [music, ambience]; return; }
-      if (this.scene !== music) {
-        this.scene = music;
-        this.stopMusic();
-        if (SCORES[music]) this.startMusic(SCORES[music]);
-      }
-      if (this.ambName !== ambience) { this.ambName = ambience; this.startAmbience(ambience); }
+    /* ---------------- scene changes ---------------- */
+    setScene(mapId, ambience) {
+      if (!this.unlocked) { this.pendingScene = [mapId, ambience]; return; }
+      const key = (NF.CONTENT.ROOM_MUSIC || {})[mapId] || 'hub';
+      this.wantKey = key;
+      if (this.musicOn && key !== this.trackKey) this.playTrack(key);
+      if (this.ready && this.ambName !== ambience) { this.ambName = ambience; this.startAmbience(ambience); }
     },
-    stopMusic() { if (this.seqTimer) clearInterval(this.seqTimer); this.seqTimer = null; },
-    startMusic(score) {
-      const c = this.ctx;
-      const beat = 60 / score.bpm;
-      let step = 0; // eighth notes
-      let next = c.currentTime + 0.15;
-      let seed = 7;
-      const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-      const melodyMemo = {};
-      const tick = () => {
-        while (next < c.currentTime + 0.4) {
-          const bar = Math.floor(step / 8) % score.prog.length;
-          const e = step % 8;
-          const [root, q] = score.prog[bar];
-          const tones = QUAL[q];
-          const swingOff = e % 2 === 1 ? score.swing * beat : 0;
-          const t = next + swingOff;
-          // bass / left hand
-          if (score.style === 'stride') {
-            if (e === 0) this.tone(NOTE(root - 12), t, beat * 0.9, 'triangle', 0.22);
-            if (e === 4) this.tone(NOTE(root - 12 + 7), t, beat * 0.9, 'triangle', 0.2);
-            if (e === 2 || e === 6) tones.slice(0, 3).forEach((iv) => this.tone(NOTE(root + iv + 12), t, beat * 0.35, 'square', 0.025, 1800));
-          } else if (score.style === 'march') {
-            if (e % 4 === 0) this.tone(NOTE(root - 12 + (e === 4 ? 7 : 0)), t, beat * 0.8, 'triangle', 0.2);
-            if (e % 4 === 2) tones.slice(0, 3).forEach((iv) => this.tone(NOTE(root + iv + 12), t, beat * 0.3, 'square', 0.022, 1600));
-          } else if (score.style === 'arp') {
-            const iv = tones[e % tones.length] + (e >= 4 ? 12 : 0);
-            this.tone(NOTE(root + iv), t, beat * 1.2, 'triangle', 0.08);
-            if (e === 0) this.tone(NOTE(root - 12), t, beat * 3.5, 'sine', 0.16);
-          } else if (score.style === 'pulse') {
-            if (e % 2 === 0) this.tone(NOTE(root - 12), t, beat * 0.4, 'triangle', 0.16);
-            if (e === 3 || e === 7) tones.slice(0, 3).forEach((iv) => this.tone(NOTE(root + iv + 12), t, beat * 0.25, 'square', 0.018, 1200));
-          } else {
-            if (e === 0) this.tone(NOTE(root - 12), t, beat * 1.8, 'triangle', 0.18);
-            if (e === 4) this.tone(NOTE(root - 5), t, beat * 1.8, 'triangle', 0.15);
-            if (e === 2 || e === 6) tones.slice(0, 3).forEach((iv) => this.tone(NOTE(root + iv + 12), t, beat * 0.6, 'sine', 0.035));
-          }
-          // melody (deterministic per bar, so it repeats like a real tune)
-          const key = bar + ':' + e;
-          if (melodyMemo[key] === undefined) {
-            const play = score.style === 'arp' ? false : rnd() < (e % 2 === 0 ? 0.62 : 0.32);
-            const iv = tones[Math.floor(rnd() * tones.length)] + (rnd() < 0.3 ? 12 : 0) + (rnd() < 0.15 ? 2 : 0);
-            melodyMemo[key] = play ? iv : null;
-          }
-          const mv = melodyMemo[key];
-          if (mv !== null && mv !== undefined) this.tone(NOTE(root + 24 + mv), t, beat * 0.42, 'square', score.lead, 2600, true);
-          step++;
-          next += beat / 2;
-        }
+
+    /* ---------------- music player (one track at a time) ---------------- */
+    playTrack(key) {
+      const info = NF.CONTENT.MUSIC[key];
+      const token = (this.token = (this.token || 0) + 1);
+      const start = () => {
+        if (token !== this.token) return;
+        this.trackKey = key;
+        if (!info || !this.musicOn) return;
+        const el = new window.Audio();
+        el.loop = true; el.preload = 'auto'; el.volume = 0; el.src = info.src;
+        el.addEventListener('error', () => { if (this.el === el) { this.el = null; this.trackKey = null; } console.info('Music file unavailable, continuing without music:', info.src); });
+        this.el = el;
+        el.play().then(() => this.fadeTo(el, this.musicTarget(), 1200)).catch(() => { /* autoplay blocked or file missing: stay silent */ });
       };
-      tick();
-      this.seqTimer = setInterval(tick, 120);
+      if (this.el) this.stopTrack(start); else start();
     },
-    tone(freq, t, dur, type, vol, lp, vib) {
-      const c = this.ctx;
-      const o = c.createOscillator(), g = c.createGain();
-      o.type = type; o.frequency.value = freq;
-      if (vib) { const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = 5.5; lg.gain.value = freq * 0.004; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + dur + 0.1); }
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(vol, t + 0.012);
-      g.gain.exponentialRampToValueAtTime(Math.max(0.0001, vol * 0.4), t + dur * 0.6);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      let node = o;
-      if (lp) { const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp; o.connect(f); node = f; }
-      node.connect(g); g.connect(this.musicBus);
-      o.start(t); o.stop(t + dur + 0.05);
+    stopTrack(after) {
+      const el = this.el;
+      this.el = null; this.trackKey = null;
+      if (!el) { if (after) after(); return; }
+      this.fadeTo(el, 0, 600, () => { try { el.pause(); el.removeAttribute('src'); el.load(); } catch (e) { /* ignore */ } if (after) after(); });
+    },
+    fadeTo(el, target, ms, done) {
+      const from = el.volume, t0 = performance.now();
+      this.fading = true;
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / ms);
+        try { el.volume = from + (target - from) * k; } catch (e) { /* ignore */ }
+        if (k < 1) requestAnimationFrame(step); else { this.fading = false; if (done) done(); else if (this.el === el) el.volume = this.musicTarget(); }
+      };
+      requestAnimationFrame(step);
     },
 
     /* ---------------- ambience ---------------- */

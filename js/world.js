@@ -1,5 +1,5 @@
 /* =====================================================================
-   THE NORMALCY FILES — world.js
+   THE NORMALCY FILES: world.js
    Builds the town square and every interior room: ground art, buildings,
    props, collision boxes, interactables, lights and NPC placements.
    ===================================================================== */
@@ -32,9 +32,16 @@
   };
   NF.LOOKS = LOOKS;
 
+  /* ---------- characters with conversations (see PEOPLE in content.js) ---------- */
+  function person(m, key, x, y, fixed) {
+    const p = C().PEOPLE[key];
+    if (!p) return;
+    m.npcs.push({ id: key, name: p.name, label: p.label, look: p.look, talk: key, x, y, home: [x, y], fixed: !!fixed, dir: 0 });
+  }
+
   /* ---------- map container ---------- */
   function newMap(id, w, h) {
-    return { id, w, h, bg: A.canvas(w, h), statics: [], anims: [], solids: [], inter: [], lights: [], npcs: [], doors: [], exits: [], overlays: [], spawn: { x: w / 2, y: h / 2, dir: 0 }, dark: 0, tint: null };
+    return { id, w, h, labels: [], mapPins: {}, bg: A.canvas(w, h), statics: [], anims: [], solids: [], inter: [], lights: [], npcs: [], doors: [], exits: [], overlays: [], spawn: { x: w / 2, y: h / 2, dir: 0 }, dark: 0, tint: null };
   }
   function solid(m, x, y, w, h) { m.solids.push({ x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) }); }
   // spr = {c, ax, ay}; placed so its anchor sits on (x, y). opts.solid=[w,h] creates a footprint centred on x ending at y
@@ -210,6 +217,8 @@
         const dx = x + L.door.x;
         doors[key] = { x: dx, y: wallBottom };
         if (opts.room) {
+          m.labels.push({ room: opts.room, x: dx, y: wallBottom - (L.door.h || 24) - 9 });
+          m.mapPins[opts.room] = { x: dx, y: top + L.extraTop + Math.round(L.roofH * 0.55) };
           m.doors.push({ x: dx - 13, y: wallBottom - 2, w: 26, h: 12, to: opts.room });
           inter(m, { kind: 'door', x: dx, y: wallBottom + 6, r: 20, to: opts.room });
         } else if (opts.sign) {
@@ -273,10 +282,12 @@
     inter(m, { kind: 'artifact', id: 'town_memorial', x: 624, y: 508, r: 24 });
     const lamp = A.lamp();
     [[448, 400], [800, 400], [448, 592], [800, 592], [600, 368], [648, 368], [400, 300 + 52], [848, 352],
-      [140, 288], [460, 288], [760, 288], [960, 288], [1120, 288], [140, 704], [460, 704], [760, 704], [1120, 704], [300, 470], [948, 470]].forEach(([x, y]) => put(m, lamp, x, y, { solid: [6, 4] }));
+      [100, 288], [460, 288], [760, 288], [960, 288], [1180, 288], [140, 704], [460, 704], [760, 704], [1120, 704], [300, 470], [948, 470]].forEach(([x, y]) => put(m, lamp, x, y, { solid: [6, 4] }));
     const bench = A.bench();
     [[520, 420], [728, 420], [520, 580], [728, 580], [470, 496], [778, 496]].forEach(([x, y]) => put(m, bench, x, y, { solid: [30, 8] }));
     put(m, A.signpost(['STATION', 'LEDGER', 'LIBRARY', 'COURT']), 584, 560, { solid: [6, 4] });
+    put(m, A.hubSign(), 690, 560, { solid: [70, 6] });
+    inter(m, { kind: 'sign', sign: 'hub', x: 690, y: 568, r: 22 });
     inter(m, { kind: 'signpost', x: 584, y: 566, r: 18 });
     put(m, A.mailbox(), 392, 352 + 20, { solid: [10, 4] });
     put(m, A.hydrant(), 856, 618, { solid: [8, 4] });
@@ -312,7 +323,7 @@
 
     /* ---------- NPCs ---------- */
     const npcAt = { guide: [600, 588], vet: [168, 300], newsboy: [1000, 300], biz: [830, 300], farmer: [700, 548], flapper: [330, 620], cop: [624, 640 - 4], immigrant: [600, 712] };
-    C().NPCS.forEach((n) => { const p = npcAt[n.id]; if (p) m.npcs.push({ id: n.id, name: n.name, look: n.look, lines: n.lines, x: p[0], y: p[1], home: [p[0], p[1]], fixed: !!n.fixed || n.id === 'cop', dir: 0 }); });
+    Object.entries(npcAt).forEach(([id, p]) => person(m, id, p[0], p[1], id === 'guide' || id === 'cop'));
 
     m.spawn = { x: 624, y: 600, dir: 3 };
     m.carLoop = [[344, 324], [904, 324], [904, 676], [344, 676]];
@@ -403,10 +414,7 @@
   }
   function wallItem(m, c, x, y) { m.bg.g.drawImage(c, Math.round(x), Math.round(y)); }
   function art(m, id, x, y, r) { inter(m, { kind: 'artifact', id, x, y, r: r || 22 }); }
-  function docent(m, roomId, x, y) {
-    const d = C().ROOMS[roomId].docent;
-    m.npcs.push({ id: 'docent-' + roomId, name: d.name + ' (fictional guide)', look: d.look, lines: d.lines, x, y, home: [x, y], fixed: true, dir: 0 });
-  }
+  function docent(m, roomId, x, y) { person(m, roomId + '_docent', x, y, true); }
   function chandelier(m, x, y) { put(m, F.chandelier(), x, y, { sy: 9999 }); m.lights.push({ x, y: y - 6, r: 70, c: 'warm', flicker: true }); }
   function photoFrame(img) { // returns an inner painter that draws a sepia thumbnail later (filled when image loads)
     return (g, x, y, w, h) => { R(g, x, y, w, h, '#c8b89a'); R(g, x + 2, y + 2, w - 4, h - 4, '#8a7a62'); A.disc(g, x + w / 2, y + h * 0.4, Math.min(w, h) * 0.18, '#d8c8a8'); R(g, x + w * 0.25, y + h * 0.62, w * 0.5, h * 0.3, '#5a4a3a'); };
@@ -438,6 +446,7 @@
     put(m, F.stanchion(40), 168, 232, { solid: [40, 4] }); put(m, F.stanchion(40), 248, 232, { solid: [40, 4] });
     chandelier(m, 126, 46); chandelier(m, 284, 46);
     docent(m, 'r1', 236, 104);
+    person(m, 'r1_union', 300, 162, true);
     return m;
   }
 
@@ -472,6 +481,7 @@
     chandelier(m, 208, 50);
     m.lights.push({ x: 208, y: 130, r: 60, c: 'warm' });
     docent(m, 'r2', 320, 160);
+    person(m, 'r2_worker', 128, 140, true);
     return m;
   }
 
@@ -505,6 +515,8 @@
     inter(m, { kind: 'game', id: 'r3', x: 208, y: 224, r: 26 });
     put(m, F.cabinet(), 30, 92, { solid: [16, 8] });
     docent(m, 'r3', 160, 196);
+    person(m, 'r3_cub', 52, 176, true);
+    wallItem(m, F.framedPrint(34, 34), 296, 8); art(m, 'r3_senate', 313, 70);
     return m;
   }
 
@@ -529,15 +541,18 @@
     put(m, F.bookshelf(34, 9), 330, 100, { solid: [34, 10] });
     chandelier(m, 208, 50);
     docent(m, 'r4', 250, 106);
+    person(m, 'r4_farmer', 36, 186, true);
     return m;
   }
 
   /* ---------- Room 5: Hall of Nations ---------- */
   function buildR5() {
     const m = room('r5', { floor: 'parquet', f1: '#b8844a', f2: '#7a5430', paper: '#2c3a5a', paper2: '#3a4a6e', pattern: 'damask', wainscot: '#6a4a2e', rail: '#d8b05a', crown: '#d8b05a', walltop: '#1e2638', ambience: 'hall', music: 'grand' });
-    wallItem(m, F.mapWall(180, 46), 118, 6);
-    m.overlays.push({ kind: 'flow', x: 118, y: 6, w: 180, h: 46 });
+    const atl = F.atlanticMap(196, 50);
+    wallItem(m, atl.c, 110, 4);
+    m.overlays.push({ kind: 'flow', x: 113, y: 7, w: 190, h: 44, pts: atl.pts });
     art(m, 'r5_flow', 208, 72, 30);
+    [[100, 30], [316, 30]].forEach(([x, y]) => m.lights.push({ x, y, r: 46, c: 'warm' }));
     ['uk', 'fr', 'de', 'be', 'it', 'jp'].forEach((k, i) => { const fp = A.flagpole(k)[i % 4]; const x = i < 3 ? 30 + i * 26 : 316 + (i - 3) * 26; put(m, { c: fp, ax: 4, ay: 60 }, x, 92, { solid: [6, 4] }); });
     put(m, F.table(150, 26, '#5a3420', '#2e5a44'), 208, 162, { solid: [150, 18] });
     for (const x of [148, 178, 208, 238, 268]) { put(m, F.chair('down', '#5a2a3a'), x, 140, { sy: 136 }); put(m, F.chair('up', '#5a2a3a'), x, 182, { solid: [12, 6] }); }
@@ -546,15 +561,16 @@
     put(m, F.lectern(), 362, 120, { solid: [16, 6] }); art(m, 'r5_kellogg', 362, 128);
     put(m, F.ships(), 64, 220, { solid: [44, 10] }); art(m, 'r5_naval', 64, 228);
     // the empty chair
-    put(m, F.chair('down', '#8a1e2a'), 208, 222, { solid: [12, 6] });
-    put(m, F.stanchion(36), 208, 238, { solid: [36, 4] });
-    m.lights.push({ x: 208, y: 214, r: 34, c: 'cool' });
-    art(m, 'r5_league', 208, 232, 20);
+    // the empty chair: a symbolic display set off to the left, clear of the exit path
+    put(m, F.chair('down', '#8a1e2a'), 140, 214, { solid: [12, 6] });
+    put(m, F.stanchion(30), 140, 230, { solid: [30, 4] });
+    m.lights.push({ x: 140, y: 206, r: 34, c: 'cool' });
+    art(m, 'r5_league', 162, 222, 20);
     put(m, F.table(44, 20, '#5a3420', '#e8dcbc'), 352, 214, { solid: [44, 14] });
-    const mini = F.mapWall(36, 14); m.statics.push({ img: mini, x: 334, y: 196, sy: 215 });
+    m.statics.push({ img: F.ledgerPapers(), x: 335, y: 197, sy: 215 });
     inter(m, { kind: 'game', id: 'r5', x: 352, y: 226, r: 24 });
-    chandelier(m, 120, 50); chandelier(m, 296, 50);
     docent(m, 'r5', 290, 108);
+    person(m, 'r5_banker', 112, 112, true);
     return m;
   }
 
@@ -580,15 +596,16 @@
     const t = F.table(56, 18, '#6a4028', '#e8dcbc'); [[6, 4], [18, 5], [30, 3], [42, 5]].forEach(([x, y]) => { R(t.c.g, x, y, 9, 11, '#f4ecd8'); R(t.c.g, x + 2, y + 2, 5, 4, '#8a7a62'); });
     put(m, t, 330, 214, { solid: [56, 12] });
     inter(m, { kind: 'game', id: 'r6', x: 330, y: 226, r: 24 });
-    chandelier(m, 208, 50);
+    m.lights.push({ x: 208, y: 120, r: 80, c: 'warm' });
     docent(m, 'r6', 208, 214);
+    person(m, 'r6_volunteer', 96, 168, true);
     return m;
   }
 
   /* ---------- Courthouse ---------- */
   function buildCourt() {
     const m = room('court', { floor: 'wood', f1: '#7a4a2c', f2: '#4a2a18', paper: '#e8dcc0', paper2: '#d8c8a0', pattern: 'stripe', wainscot: '#5a3420', rail: '#c8a45a', crown: '#4a2c1c', walltop: '#2a1a10', ambience: 'court', music: 'reflective' });
-    m.title = 'The Courthouse — Judge Normalcy';
+    m.title = 'The Courthouse: Judge Normalcy';
     [[20, 6], [370, 6]].forEach(([x, y]) => wallItem(m, F.window(26, 34, false), x, y));
     const seal = A.canvas(30, 30); A.disc(seal.g, 15, 15, 14, '#d8b05a'); A.disc(seal.g, 15, 15, 11, '#2b3f7a'); R(seal.g, 8, 14, 15, 1, '#d8b05a'); R(seal.g, 15, 8, 1, 14, '#d8b05a'); wallItem(m, seal, 193, 4);
     put(m, F.judgeBench(120), 208, 112, { solid: [120, 26] });
@@ -614,7 +631,7 @@
     m.title = 'The Reference Library';
     [8, 44, 334, 370].forEach((x, i) => wallItem(m, F.bookshelf(36, 40 + i).c, x, 12));
     // EQ board
-    const eq = F.plaque(56, 34, '#1e2a2a'); A.textC(eq.g, 'ESSENTIAL', 28, 4, '#e2b85a', 1); A.textC(eq.g, 'QUESTIONS', 28, 11, '#e2b85a', 1); wallItem(m, eq, 88, 6);
+    const eq = F.plaque(56, 34, '#1e2a2a'); A.textC(eq.g, 'THE TWO BIG', 28, 4, '#e2b85a', 1); A.textC(eq.g, 'QUESTIONS', 28, 11, '#e2b85a', 1); wallItem(m, eq, 88, 6);
     inter(m, { kind: 'eqboard', x: 116, y: 70, r: 22 });
     // projection screen
     const scr = A.canvas(80, 36); R(scr.g, 0, 0, 80, 36, '#3a2a1c'); R(scr.g, 2, 2, 76, 32, '#f4f0e4'); R(scr.g, 2, 30, 76, 4, '#d8d0c0'); A.textC(scr.g, 'HELP DESK', 40, 14, '#7a6a5a', 1);
@@ -630,7 +647,7 @@
     put(m, F.lectern(), 340, 150, { solid: [16, 6] });
     inter(m, { kind: 'scripts', x: 340, y: 158, r: 22 });
     [[120, 214], [296, 214]].forEach(([x, y]) => { put(m, F.table(56, 16, '#6a4028', '#3e6a4a'), x, y, { solid: [56, 10] }); put(m, F.bankerLamp(), x - 10, y - 16, { sy: y + 1 }); m.lights.push({ x: x - 10, y: y - 22, r: 40, c: 'warm', flicker: true }); });
-    chandelier(m, 208, 50);
+    m.lights.push({ x: 208, y: 120, r: 80, c: 'warm' });
     docent(m, 'library', 150, 120);
     return m;
   }

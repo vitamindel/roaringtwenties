@@ -1,19 +1,19 @@
 /* =====================================================================
-   THE NORMALCY FILES — ui.js
-   HUD, prompts, dialogue, modals, narration player, map, settings,
-   help, reference room panels, touch controls and the title screen.
+   THE NORMALCY FILES: ui.js
+   HUD, prompts, conversations, modals, narration player, map, settings,
+   help, reference-library panels, touch controls and the title screen.
    ===================================================================== */
 (function () {
   'use strict';
   const NF = (window.NF = window.NF || {});
   const $ = (s) => document.querySelector(s);
 
-  /* tiny DOM builder: h('div.cls#id', {attrs}, ...children) */
+  /* tiny DOM builder: h('div.cls#id', {attrs}, ...children). Null children are skipped. */
   function h(sel, attrs, ...kids) {
     const m = sel.match(/^([a-z0-9]+)?((?:[.#][\w-]+)*)$/i);
     const el = document.createElement((m && m[1]) || 'div');
     if (m && m[2]) m[2].replace(/([.#])([\w-]+)/g, (_, t, n) => { if (t === '.') el.classList.add(n); else el.id = n; });
-    if (attrs && (typeof attrs !== 'object' || attrs instanceof Node || Array.isArray(attrs))) { kids.unshift(attrs); attrs = null; }
+    if (attrs !== null && attrs !== undefined && (typeof attrs !== 'object' || attrs instanceof Node || Array.isArray(attrs))) { kids.unshift(attrs); attrs = null; }
     if (attrs) for (const [k, v] of Object.entries(attrs)) {
       if (v === undefined || v === null || v === false) continue;
       if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
@@ -30,14 +30,12 @@
   const UI = (NF.UI = {
     modals: [],
     init() {
-      const C = NF.CONTENT;
-      this.C = C;
+      this.C = NF.CONTENT;
       $('#btn-map').onclick = () => this.openMap();
       $('#btn-narr').onclick = () => this.toggleNarration();
       $('#btn-help').onclick = () => this.openHelp();
       $('#btn-pause').onclick = () => this.openPause();
       $('#prompt').onclick = () => { const g = NF.Game; if (g.near && !g.paused) g.activate(g.near); };
-      // portrait
       const pc = $('#hud-portrait'); const pg = pc.getContext('2d'); pg.imageSmoothingEnabled = false; pg.drawImage(NF.Art.portrait(NF.LOOKS.player), 0, 0);
       window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && this.modals.length) { e.preventDefault(); e.stopPropagation(); this.closeTop(); }
@@ -57,22 +55,38 @@
 
     /* ---------- HUD ---------- */
     onMapChange(m) {
-      const C = this.C;
-      const room = C.ROOMS[m.id];
-      $('#hud-room').textContent = room ? (room.num <= 6 ? `Exhibit ${room.num} · ${room.title}` : room.title) : m.title || 'Town Square';
+      const room = this.C.ROOMS[m.id];
+      $('#hud-room').textContent = room ? (room.num <= 6 ? `Exhibit ${room.num}: ${room.title}` : room.title) : 'Town Square (museum hub)';
       this.updateHud();
       this.setPrompt(null);
       this.stopNarration();
-      const btn = $('#btn-narr');
-      btn.style.opacity = C.ROOMS[m.id] && C.ROOMS[m.id].narration ? 1 : 0.5;
+      $('#narr').hidden = true; $('#btn-narr').classList.remove('active');
+      $('#btn-narr').style.opacity = room && room.narration ? 1 : 0.5;
     },
     updateHud() {
-      const S = NF.Save.data, C = this.C;
+      const S = NF.Save.data, C = this.C, G = NF.Game;
       const ex = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'].filter((r) => S.visited[r]).length;
       const totalArt = Object.keys(C.ARTIFACTS).length;
       const seen = Object.keys(C.ARTIFACTS).filter((k) => S.examined[k]).length;
       const games = Object.keys(C.GAMES).filter((k) => S.games[k]).length;
-      $('#hud-stats').textContent = `Exhibits ${ex}/6 · Artifacts ${seen}/${totalArt} · Games ${games}/6`;
+      const id = G.map ? G.map.id : 'town';
+      const room = C.ROOMS[id];
+      let line;
+      if (room) {
+        const arts = Object.keys(C.ARTIFACTS).filter((k) => C.ARTIFACTS[k].room === id);
+        const got = arts.filter((k) => S.examined[k]).length;
+        const parts = [];
+        if (arts.length) parts.push(`Exhibits ${got}/${arts.length}`);
+        if (C.GAMES[id]) parts.push(S.games[id] ? 'Game done' : 'Game not played');
+        if (id === 'court') parts.push(S.verdict ? 'Verdict given' : 'No verdict yet');
+        parts.push('Exit: red mat at the bottom');
+        line = parts.join(' · ');
+        $('#hud-objective').textContent = room.objective || '';
+      } else {
+        line = `Rooms visited ${ex}/6 · Artifacts ${seen}/${totalArt} · Games ${games}/6`;
+        $('#hud-objective').textContent = 'Main hub: follow the gold arrow to your next exhibit.';
+      }
+      $('#hud-stats').textContent = line;
       const pct = ((ex / 6) * 0.3 + (seen / totalArt) * 0.35 + (games / 6) * 0.25 + (S.verdict ? 0.1 : 0)) * 100;
       $('#hud-bar-fill').style.width = Math.round(pct) + '%';
     },
@@ -82,31 +96,31 @@
       if (this._guide === tgt && !el.hidden) return;
       this._guide = tgt;
       const r = this.C.ROOMS[tgt];
-      el.textContent = r.num <= 6 ? `Next ▸ Exhibit ${r.num}: ${r.building}` : `Next ▸ ${r.building}`;
+      el.textContent = r.num <= 6 ? `Next: Exhibit ${r.num}, ${r.building} ➜` : `Next: ${r.building} ➜`;
       el.hidden = false;
     },
     setPrompt(it) {
       const el = $('#prompt');
       if (!it || NF.Game.paused) { el.hidden = true; return; }
       const C = this.C;
-      let verb = 'Examine', label = '', isNew = false;
+      let verb = 'examine', label = '', isNew = false;
       switch (it.kind) {
-        case 'artifact': { const a = C.ARTIFACTS[it.id]; label = a.title; isNew = !NF.Save.data.examined[it.id]; break; }
-        case 'game': verb = 'Play'; label = C.GAMES[it.id].title; isNew = !NF.Save.data.games[it.id]; break;
-        case 'npc': verb = 'Talk'; label = it.npc.name; break;
-        case 'door': { const r = C.ROOMS[it.to]; verb = 'Enter'; label = r.num <= 6 ? `Exhibit ${r.num}: ${r.title}` : r.title; break; }
-        case 'sign': verb = 'Read'; label = C.SIGNS[it.sign].title; break;
-        case 'signpost': verb = 'Read'; label = 'Signpost'; break;
-        case 'verdict': verb = 'Approach'; label = 'the bench — deliver your verdict'; break;
-        case 'biblio': verb = 'Open'; label = 'the bibliography'; break;
-        case 'credits': verb = 'Read'; label = 'team credits'; break;
-        case 'replay': verb = 'Play'; label = 'the help-desk introduction'; break;
-        case 'eqboard': verb = 'Read'; label = 'the Essential Questions'; break;
-        case 'scripts': verb = 'Read'; label = 'narration scripts'; break;
+        case 'artifact': { const a = C.ARTIFACTS[it.id]; label = a ? a.title : 'exhibit'; isNew = !NF.Save.data.examined[it.id]; break; }
+        case 'game': verb = 'play'; label = C.GAMES[it.id].title; isNew = !NF.Save.data.games[it.id]; break;
+        case 'npc': verb = 'talk to'; label = it.npc.name; break;
+        case 'door': { const r = C.ROOMS[it.to]; verb = 'enter'; label = r.num <= 6 ? `Exhibit ${r.num}: ${r.title}` : r.title; break; }
+        case 'sign': verb = 'read'; label = C.SIGNS[it.sign].title; break;
+        case 'signpost': verb = 'read'; label = 'the signpost'; break;
+        case 'verdict': verb = 'approach'; label = 'the bench (verdict and written answers)'; break;
+        case 'biblio': verb = 'open'; label = 'the bibliography'; break;
+        case 'credits': verb = 'read'; label = 'the team credits'; break;
+        case 'replay': verb = 'play'; label = 'the help-desk introduction'; break;
+        case 'eqboard': verb = 'read'; label = 'the two big questions'; break;
+        case 'scripts': verb = 'read'; label = 'narration scripts and music credits'; break;
       }
       el.innerHTML = '';
-      el.append(h('kbd', 'E'), h('span.p-verb', verb), h('span', label));
-      if (isNew) el.append(h('span.p-new', 'NEW'));
+      el.append(h('span', 'Press '), h('kbd', 'E'), h('span', ` to ${verb}: `), h('b.p-label', label));
+      if (isNew) el.append(h('span.p-new', 'new'));
       el.hidden = false;
     },
 
@@ -126,23 +140,23 @@
       if (!r) return;
       const tc = $('#titlecard');
       tc.innerHTML = '';
-      tc.append(h('div.tc-inner', h('div.tc-kicker', r.num <= 6 ? `EXHIBIT ${r.num} OF 6` : r.building.toUpperCase()), h('div.tc-title', r.title), h('div.tc-rule', '◆'), h('div.tc-q', r.question)));
+      tc.append(h('div.tc-inner', h('div.tc-kicker', r.num <= 6 ? `Exhibit ${r.num} of 6` : r.building), h('div.tc-title', r.title), h('div.tc-q', r.question), r.objective ? h('div.tc-obj', r.objective) : null));
       tc.hidden = false;
       clearTimeout(this._tc);
-      this._tc = setTimeout(() => { tc.hidden = true; }, 3400);
-      if (first) { this.toast(r.num <= 6 ? `Exhibit ${r.num} discovered` : `${r.building} discovered`, 'NEW ROOM', '◆'); if (NF.Audio) NF.Audio.sfx('discover'); }
+      this._tc = setTimeout(() => { tc.hidden = true; }, 3600);
+      if (first) { this.toast(r.num <= 6 ? `Exhibit ${r.num} visited` : `${r.building} visited`, 'New room', '◆'); NF.Audio.sfx('discover'); }
       this.updateHud();
     },
 
     /* ---------- modals ---------- */
     modal(o) {
       const root = $('#modal-root');
-      const closeBtn = h('button.x-btn', { 'aria-label': 'Close', onclick: () => this.closeTop() }, '×');
+      const closeBtn = h('button.x-btn', { 'aria-label': 'Close', title: 'Close (Esc)', onclick: () => this.closeTop() }, '✕');
       const body = h('div.modal-body');
       if (o.body) body.append(o.body);
-      const foot = o.foot === false ? null : h('div.modal-foot', o.foot || null, h('span.spacer'), h('button.deco-btn.small', { onclick: () => this.closeTop() }, o.closeText || 'Close  (Esc)'));
+      const foot = o.foot === false ? null : h('div.modal-foot', o.foot || null, h('span.spacer'), h('button.deco-btn.small', { onclick: () => this.closeTop() }, o.closeText || 'Close'));
       const box = h('div.modal' + (o.cls ? '.' + o.cls.split(' ').join('.') : ''), { role: 'dialog', 'aria-modal': 'true', 'aria-label': o.title },
-        h('div.modal-head', o.icon ? h('span', { style: { fontSize: '22px' } }, o.icon) : null, h('div.mh-text', o.kicker ? h('div.mh-kicker', o.kicker) : null, h('div.mh-title', o.title)), closeBtn),
+        h('div.modal-head', h('div.mh-text', o.kicker ? h('div.mh-kicker', o.kicker) : null, h('div.mh-title', o.title)), closeBtn),
         body, foot);
       const wrap = h('div.modal-wrap', { onclick: (e) => { if (e.target === wrap) this.closeTop(); } }, box);
       root.append(wrap);
@@ -150,7 +164,7 @@
       this.modals.push(rec);
       NF.Game.paused = true;
       this.setPrompt(null);
-      setTimeout(() => { const f = box.querySelector('button, [tabindex], input, textarea'); if (f) f.focus({ preventScroll: true }); }, 30);
+      setTimeout(() => { const f = box.querySelector('.modal-body button, .modal-body [tabindex], .modal-body input, .modal-body textarea') || closeBtn; f.focus({ preventScroll: true }); }, 30);
       return rec;
     },
     closeTop() {
@@ -158,7 +172,7 @@
       if (!m) return;
       m.wrap.remove();
       if (m.onClose) m.onClose();
-      if (NF.Audio) NF.Audio.sfx('close');
+      NF.Audio.sfx('close');
       if (!this.modals.length) { NF.Game.paused = false; NF.Game.near = null; NF.Input.keys = {}; this.updateHud(); }
     },
     closeAll() { while (this.modals.length) this.closeTop(); },
@@ -169,50 +183,82 @@
       switch (it.kind) {
         case 'artifact': NF.Artifacts.open(it.id); break;
         case 'game': NF.Games.open(it.id); break;
-        case 'npc': this.dialogue(it.npc); break;
-        case 'sign': { const s = C.SIGNS[it.sign]; this.dialogue({ name: s.title, lines: [s.text], look: null }); break; }
-        case 'signpost': this.dialogue({ name: 'Signpost', look: null, lines: ['North: Union Station (Exhibit 1), the White House (2), and the Daily Ledger (3).', 'East: Treasury & Press Hall (4). South: Hall of Nations (5), Community Hall (6), and the Courthouse.', 'West: the Public Library — every source used in this museum.'] }); break;
+        case 'npc': this.talk(it.npc.talk, it.npc); break;
+        case 'sign': { const s = C.SIGNS[it.sign]; this.say(s.title, 'Sign', s.text); break; }
+        case 'signpost': this.say('Signpost', 'Sign', 'North road: Union Station (Exhibit 1), the White House (Exhibit 2) and the Daily Ledger (Exhibit 3). East: Treasury & Press Hall (Exhibit 4). South: Hall of Nations (Exhibit 5), Community Hall (Exhibit 6) and the Courthouse. West: the Public Library.'); break;
         case 'verdict': NF.Games.verdict(); break;
         case 'biblio': this.openBibliography(); break;
         case 'credits': this.openCredits(); break;
         case 'replay': NF.Title.show(true); break;
-        case 'eqboard': this.openEQs(); break;
+        case 'eqboard': this.openBigQuestions(); break;
         case 'scripts': this.openScripts(); break;
       }
     },
 
-    /* ---------- dialogue ---------- */
-    dialogue(npc) {
+    /* ---------- conversations ----------
+       A dialogue box with clickable response options. Each option gives a
+       different answer. Moving away (arrow keys / WASD) or Esc ends it. */
+    talk(key, npc) {
+      const p = this.C.PEOPLE[key];
+      if (!p) return;
+      const asked = new Set();
+      this.dialogBox({
+        name: p.name, label: p.label, look: p.look,
+        build: (box, set) => {
+          const showMenu = (text, src) => {
+            const opts = p.topics.map((t, i) => h('button.d-opt' + (asked.has(i) ? '.asked' : ''), { onclick: () => { asked.add(i); NF.Audio.sfx('click'); showMenu(t.a.join(' '), t.src); } }, h('span.d-num', String(i + 1)), t.q));
+            const bye = h('button.d-opt.bye', { onclick: () => this.closeTop() }, h('span.d-num', '✕'), 'Goodbye');
+            const s = src ? NF.src(src) : null;
+            set(text, s ? h('div.d-src', 'Source: ', h('span', { html: s.mla.replace(/<[^>]+>/g, '') }), ' ', h('a', { href: s.url, target: '_blank', rel: 'noopener' }, 'link ↗')) : null, h('div.d-opts', opts, bye));
+          };
+          showMenu(p.greet);
+          box._keys = (e) => {
+            const n = parseInt(e.key, 10);
+            if (n >= 1 && n <= p.topics.length) { asked.add(n - 1); showMenu(p.topics[n - 1].a.join(' '), p.topics[n - 1].src); return true; }
+            return false;
+          };
+        },
+        onClose: () => { if (npc) npc.wait = 2; },
+      });
+    },
+    say(name, label, text) {
+      this.dialogBox({ name, label, look: null, build: (box, set) => set(text, null, h('div.d-opts', h('button.d-opt.bye', { onclick: () => this.closeTop() }, h('span.d-num', '✕'), 'Close'))) });
+    },
+    dialogBox(o) {
       const root = $('#modal-root');
-      let i = 0, typing = null;
-      const cv = h('canvas', { width: 18, height: 16 });
-      if (npc.look && NF.LOOKS[npc.look]) { const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(NF.Art.portrait(NF.LOOKS[npc.look]), 0, 0); }
-      const txt = h('div.d-text'), more = h('div.d-more', '▼ E / click');
-      const box = h('div.dialog', { role: 'dialog', 'aria-label': npc.name }, npc.look ? cv : h('canvas', { width: 18, height: 16 }), h('div', { style: { flex: 1 } }, h('div.d-name', npc.name), txt), more);
-      const wrap = h('div.modal-wrap', { style: { background: 'transparent', backdropFilter: 'none' } }, box);
+      const cv = h('canvas', { width: 18, height: 16, 'aria-hidden': 'true' });
+      if (o.look && NF.LOOKS[o.look]) { const g = cv.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(NF.Art.portrait(NF.LOOKS[o.look]), 0, 0); }
+      const txt = h('div.d-text', { 'aria-live': 'polite' });
+      const extra = h('div');
+      const close = h('button.x-btn.d-close', { 'aria-label': 'End conversation', title: 'End conversation (Esc)', onclick: () => this.closeTop() }, '✕');
+      const box = h('div.dialog', { role: 'dialog', 'aria-label': o.name },
+        o.look ? cv : null,
+        h('div.d-main', h('div.d-name', o.name, o.label ? h('span.d-label', o.label) : null), txt, extra), close);
+      const wrap = h('div.modal-wrap.dialog-wrap', { onclick: (e) => { if (e.target === wrap) this.closeTop(); } }, box);
       root.append(wrap);
-      const rec = { wrap, onClose: () => { clearInterval(typing); window.removeEventListener('keydown', key, true); } };
+      let typing = null;
+      const set = (text, ...more) => {
+        clearInterval(typing);
+        const full = text || '';
+        let n = 0; txt.textContent = '';
+        const reduce = this.settings().reduceMotion;
+        typing = setInterval(() => { n += reduce ? 9999 : 3; txt.textContent = full.slice(0, n); if (n >= full.length) { clearInterval(typing); typing = null; } }, 16);
+        extra.innerHTML = '';
+        more.forEach((m) => { if (m) extra.append(m); });
+        const first = extra.querySelector('button'); if (first) first.focus({ preventScroll: true });
+      };
+      const keys = (e) => {
+        if (this.modals[this.modals.length - 1] !== rec) return;
+        const k = e.key.toLowerCase();
+        if (typing && ['e', ' ', 'enter'].includes(k)) { e.preventDefault(); clearInterval(typing); typing = null; return; }
+        if (box._keys && box._keys(e)) { e.preventDefault(); return; }
+        if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(k)) { e.preventDefault(); this.closeTop(); }
+      };
+      const rec = { wrap, onClose: () => { clearInterval(typing); window.removeEventListener('keydown', keys, true); if (o.onClose) o.onClose(); } };
       this.modals.push(rec);
       NF.Game.paused = true; this.setPrompt(null);
-      const show = () => {
-        const full = npc.lines[i];
-        let n = 0; txt.textContent = '';
-        clearInterval(typing);
-        const reduce = this.settings().reduceMotion;
-        typing = setInterval(() => { n += reduce ? 999 : 2; txt.textContent = full.slice(0, n); if (n >= full.length) { clearInterval(typing); typing = null; } }, 18);
-        more.textContent = i < npc.lines.length - 1 ? '▼ E / click' : '✕ E / click to close';
-      };
-      const advance = () => {
-        if (typing) { clearInterval(typing); typing = null; txt.textContent = npc.lines[i]; return; }
-        i++;
-        if (NF.Audio) NF.Audio.sfx('click');
-        if (i >= npc.lines.length) { this.closeTop(); return; }
-        show();
-      };
-      const key = (e) => { if (this.modals[this.modals.length - 1] !== rec) return; if (['e', ' ', 'enter'].includes(e.key.toLowerCase())) { e.preventDefault(); e.stopPropagation(); advance(); } };
-      window.addEventListener('keydown', key, true);
-      box.onclick = advance;
-      show();
+      window.addEventListener('keydown', keys, true);
+      o.build(box, set);
     },
 
     /* ---------- narration ---------- */
@@ -221,7 +267,7 @@
       const a = this.narr.audio;
       a.preload = 'none';
       a.addEventListener('timeupdate', () => this.narrTick());
-      a.addEventListener('ended', () => { this.narr.playing = false; this.narrUi(); this.showCaption(null); if (NF.Audio) NF.Audio.setDuck(false); });
+      a.addEventListener('ended', () => { this.narr.playing = false; this.narrUi(); this.showCaption(null); NF.Audio.setDuck(false); });
       $('#narr-close').onclick = () => { this.stopNarration(); $('#narr').hidden = true; $('#btn-narr').classList.remove('active'); };
       $('#narr-play').onclick = () => this.narrToggle();
       $('#narr-replay').onclick = () => this.narrPlay(true);
@@ -239,11 +285,11 @@
         else if (this.narr.mode === 'tts') { this.narr.idx = Math.floor(f * this.narr.lines.length); this.ttsSpeak(); }
       };
     },
-    setVoiceVolume(v) { this.narr.audio.volume = v; },
+    setVoiceVolume(v) { this.narr.audio.volume = v; const vol = $('#narr-vol'); if (vol) vol.value = v; },
     toggleNarration() {
       const id = NF.Game.map.id, room = this.C.ROOMS[id];
       const panel = $('#narr');
-      if (!room || !room.narration) { this.toast('Narration is available inside each of the six exhibits.', 'NARRATION', '♪'); return; }
+      if (!room || !room.narration) { this.toast('Narration plays inside each of the six exhibits.', 'Narration', '♪'); return; }
       if (!panel.hidden && this.narr.room === id) { panel.hidden = true; this.stopNarration(); $('#btn-narr').classList.remove('active'); return; }
       panel.hidden = false;
       $('#btn-narr').classList.add('active');
@@ -256,12 +302,11 @@
       N.room = id; N.lines = room.narration; N.idx = 0;
       $('#narr-title').textContent = `Exhibit ${room.num}: ${room.title}`;
       N.mode = 'probe';
-      $('#narr-mode').textContent = 'Loading student recording…';
-      const src = this.C.MEDIA.narration[id];
-      N.audio.src = src;
+      $('#narr-mode').textContent = 'Loading the student recording…';
+      N.audio.src = this.C.MEDIA.narration[id];
       N.audio.onerror = () => {
         N.mode = 'tts';
-        $('#narr-mode').textContent = ('speechSynthesis' in window) ? 'Student recording not added yet — playing a text-to-speech preview. Captions and transcript are always available.' : 'Student recording not added yet. Read the transcript or captions below.';
+        $('#narr-mode').textContent = ('speechSynthesis' in window) ? 'Student recording not added yet, so a computer voice reads the script. Captions and the transcript are always available.' : 'Student recording not added yet. Use the captions or the transcript.';
         if (N.wantPlay) this.ttsSpeak();
       };
       N.audio.oncanplay = () => { if (N.mode === 'probe') { N.mode = 'audio'; $('#narr-mode').textContent = 'Student recording'; if (N.wantPlay) this.narrPlay(); } };
@@ -271,7 +316,7 @@
       const N = this.narr;
       if (!N.room) return;
       N.wantPlay = true;
-      if (NF.Audio) NF.Audio.setDuck(true);
+      NF.Audio.setDuck(true);
       if (N.mode === 'audio') { if (restart) N.audio.currentTime = 0; N.audio.play().catch(() => {}); N.playing = true; }
       else if (N.mode === 'tts') { if (restart) N.idx = 0; this.ttsSpeak(); }
       else { N.playing = true; }
@@ -283,7 +328,7 @@
         N.playing = false; N.wantPlay = false;
         if (N.mode === 'audio') N.audio.pause();
         if (N.mode === 'tts' && window.speechSynthesis) speechSynthesis.cancel();
-        if (NF.Audio) NF.Audio.setDuck(false);
+        NF.Audio.setDuck(false);
         this.narrUi();
       } else this.narrPlay(false);
     },
@@ -295,7 +340,7 @@
       if (window.speechSynthesis) speechSynthesis.cancel();
       this.showCaption(null);
       if (NF.Audio) NF.Audio.setDuck(false);
-      this.narrUi && this.narrUi();
+      this.narrUi();
     },
     ttsSpeak() {
       const N = this.narr;
@@ -305,7 +350,7 @@
       const token = (N.token = (N.token || 0) + 1);
       const speakOne = () => {
         if (token !== N.token || !N.playing) return;
-        if (N.idx >= N.lines.length) { N.playing = false; N.idx = 0; this.showCaption(null); this.narrUi(); if (NF.Audio) NF.Audio.setDuck(false); return; }
+        if (N.idx >= N.lines.length) { N.playing = false; N.idx = 0; this.showCaption(null); this.narrUi(); NF.Audio.setDuck(false); return; }
         const u = new SpeechSynthesisUtterance(N.lines[N.idx]);
         u.rate = 0.98; u.pitch = 1.02; u.volume = NF.Audio.vol.voice;
         const v = speechSynthesis.getVoices().find((x) => /en[-_]US/i.test(x.lang) && /Natural|Aria|Jenny|Google/i.test(x.name)) || speechSynthesis.getVoices().find((x) => /^en/i.test(x.lang));
@@ -321,10 +366,9 @@
     narrTick() {
       const N = this.narr, a = N.audio;
       if (N.mode !== 'audio' || !a.duration) return;
-      // approximate captions: split time proportionally to sentence length
       const total = N.lines.reduce((s, l) => s + l.length, 0);
-      let acc = 0, f = a.currentTime / a.duration, idx = 0;
-      for (let i = 0; i < N.lines.length; i++) { acc += N.lines[i].length / total; if (f <= acc) { idx = i; break; } idx = i; }
+      let acc = 0, idx = 0; const f = a.currentTime / a.duration;
+      for (let i = 0; i < N.lines.length; i++) { acc += N.lines[i].length / total; idx = i; if (f <= acc) break; }
       if (N.playing) this.showCaption(N.lines[idx]);
       this.narrUi();
     },
@@ -346,8 +390,8 @@
     openTranscript(id) {
       const room = this.C.ROOMS[id];
       if (!room) return;
-      const body = h('div', h('p', { style: { color: '#e9dcbc', fontStyle: 'italic' } }, 'Full narration transcript — the text alternative for this room’s audio.'), room.narration.map((l) => h('p', l)));
-      this.modal({ kicker: `EXHIBIT ${room.num} · TRANSCRIPT`, title: room.title, body, cls: 'narrow' });
+      const body = h('div.prose', h('p.muted', 'Full narration transcript: the text version of this room’s audio.'), room.narration.map((l) => h('p', l)));
+      this.modal({ kicker: `Exhibit ${room.num} transcript`, title: room.title, body, cls: 'narrow paper' });
     },
 
     /* ---------- map ---------- */
@@ -361,21 +405,26 @@
         c.g.drawImage(town.bg, 0, 0);
         town.statics.slice().sort((a, b) => a.sy - b.sy).forEach((s) => c.g.drawImage(s.img, s.x, s.y));
         c.g.setTransform(1, 0, 0, 1, 0, 0);
-        c.g.fillStyle = 'rgba(40,20,60,0.12)'; c.g.fillRect(0, 0, c.width, c.height);
         this._mapImg = c;
       }
       const view = h('div.map-view');
-      const cv = h('canvas', { width: this._mapImg.width, height: this._mapImg.height });
+      const cv = h('canvas', { width: this._mapImg.width, height: this._mapImg.height, 'aria-hidden': 'true' });
       cv.getContext('2d').drawImage(this._mapImg, 0, 0);
       view.append(cv);
       const next = G.nextTarget();
-      Object.entries(town.markers).forEach(([id, d]) => {
+      Object.entries(town.mapPins).forEach(([id, d]) => {
         const r = C.ROOMS[id];
-        const pin = h('button.map-pin' + (S.visited[id] ? '.done' : '') + (next === id ? '.next' : ''), { style: { left: (d.x / town.w) * 100 + '%', top: ((d.y - 70) / town.h) * 100 + '%' }, title: 'Travel here', onclick: () => { this.closeAll(); G.travelTo(id); } },
-          (r.num <= 6 ? r.num + ' · ' : '') + r.building + (S.visited[id] ? ' ✓' : ''));
+        const visited = !!S.visited[id];
+        const pin = h('button.map-pin' + (visited ? '.done' : '') + (next === id ? '.next' : ''), {
+          style: { left: (d.x / town.w) * 100 + '%', top: (d.y / town.h) * 100 + '%' },
+          title: 'Go to ' + r.building, 'aria-label': 'Go to ' + (r.num <= 6 ? 'Exhibit ' + r.num + ', ' : '') + r.building,
+          onclick: () => { this.closeAll(); G.travelTo(id); },
+        }, h('span.pin-num', r.num <= 6 ? String(r.num) : id === 'court' ? '⚖' : '✎'), h('span.pin-name', r.num <= 6 ? r.short : r.building), visited ? h('span.pin-ok', '✓') : null);
         view.append(pin);
       });
-      const here = G.map.id === 'town' ? G.player : town.markers[G.map.id] ? { x: town.markers[G.map.id].x, y: town.markers[G.map.id].y + 10 } : null;
+      const hubPin = h('span.map-hub', { style: { left: (624 / town.w) * 100 + '%', top: (452 / town.h) * 100 + '%' } }, 'Museum hub');
+      view.append(hubPin);
+      const here = G.map.id === 'town' ? G.player : town.doorsByRoom[G.map.id] ? { x: town.doorsByRoom[G.map.id].x, y: town.doorsByRoom[G.map.id].y + 10 } : null;
       if (here) view.append(h('span.map-you', { style: { left: (here.x / town.w) * 100 + '%', top: (here.y / town.h) * 100 + '%' }, title: 'You are here' }));
       const list = h('ul.dir-list');
       ['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'court', 'library'].forEach((id) => {
@@ -383,18 +432,33 @@
         const arts = Object.entries(C.ARTIFACTS).filter(([, a]) => a.room === id);
         const seen = arts.filter(([k]) => S.examined[k]).length;
         const sub = [];
-        if (S.visited[id]) sub.push(h('span.ok', 'Visited ✓')); else sub.push('Not visited');
-        if (arts.length) sub.push(` · Artifacts ${seen}/${arts.length}`);
-        if (C.GAMES[id]) sub.push(S.games[id] ? h('span.ok', ' · Game ★') : ' · Game ☆');
+        sub.push(S.visited[id] ? h('span.ok', 'Visited ✓') : h('span.no', 'Not visited yet'));
+        if (arts.length) sub.push(` · Exhibits seen ${seen}/${arts.length}`);
+        if (C.GAMES[id]) sub.push(S.games[id] ? h('span.ok', ' · Game done') : ' · Game not played');
         if (id === 'court' && S.verdict) sub.push(h('span.ok', ' · Verdict given'));
-        list.append(h('li.dir-item' + (next === id ? '.next' : ''),
+        list.append(h('li.dir-item' + (next === id ? '.next' : '') + (S.visited[id] ? '.done' : ''),
           h('span.dir-num', { style: { background: r.color } }, r.num <= 6 ? String(r.num) : id === 'court' ? '⚖' : '✎'),
           h('div', h('div.dir-title', r.title), h('div.dir-sub', sub)),
-          h('button.deco-btn.small', { onclick: () => { this.closeAll(); G.travelTo(id); } }, 'Go')));
+          h('button.deco-btn.small', { onclick: () => { this.closeAll(); G.travelTo(id); }, 'aria-label': 'Go to ' + r.title }, 'Go')));
       });
-      const side = h('div', h('h3', 'Room directory'), list, h('p', { style: { fontSize: '14px', color: '#d8c69e', marginTop: '10px' } }, 'Tip: “Go” fast-travels you to the building’s front door. The gold arrow at the top of the screen always points to your next stop.'));
-      const foot = G.map.id !== 'town' ? h('button.deco-btn.small.teal', { onclick: () => { this.closeAll(); G.toTown(); } }, '⇦ Return to Town Square') : null;
-      this.modal({ kicker: 'MUSEUM MAP', title: 'The Town of Normalcy, 1919–1929', body: h('div.map-grid', view, side), foot, icon: '🗺' });
+      const side = h('div', h('h3', 'Room directory'), h('p.muted.dir-hint', 'Click a building or “Go” to jump to its front door. The red dot shows where you are.'), list);
+      const foot = G.map.id !== 'town' ? h('button.deco-btn.small.teal', { onclick: () => { this.closeAll(); G.toTown(); } }, '⇦ Back to the town square') : null;
+      this.modal({ kicker: 'Museum map', title: 'The town of Normalcy, 1919–1929', body: h('div.map-grid', view, side), foot });
+      // keep every label fully inside the map: nudge pins that would cross an edge
+      const fit = () => {
+        const v = view.getBoundingClientRect();
+        if (!v.width) return;
+        view.querySelectorAll('.map-pin').forEach((p) => {
+          p.style.transform = 'translate(-50%, -50%)';
+          const r = p.getBoundingClientRect();
+          let dx = 0, dy = 0;
+          if (r.left < v.left + 4) dx = v.left + 4 - r.left; else if (r.right > v.right - 4) dx = v.right - 4 - r.right;
+          if (r.top < v.top + 4) dy = v.top + 4 - r.top; else if (r.bottom > v.bottom - 4) dy = v.bottom - 4 - r.bottom;
+          if (dx || dy) p.style.transform = `translate(calc(-50% + ${Math.round(dx)}px), calc(-50% + ${Math.round(dy)}px))`;
+        });
+      };
+      requestAnimationFrame(fit);
+      if (window.ResizeObserver) new ResizeObserver(fit).observe(view);
     },
 
     /* ---------- pause & settings ---------- */
@@ -402,39 +466,43 @@
       const s = this.settings(), A = NF.Audio;
       const slider = (label, key) => {
         const inp = h('input', { type: 'range', min: 0, max: 1, step: 0.05, value: A.vol[key], 'aria-label': label });
-        inp.oninput = () => { A.setVolume(key, +inp.value); if (key === 'voice') $('#narr-vol').value = inp.value; };
+        inp.oninput = () => { A.setVolume(key, +inp.value); };
         return h('div.set-row', h('span', label), inp);
       };
-      const toggle = (label, key, def, after) => {
-        const on = s[key] === undefined ? def : s[key];
-        const b = h('button.toggle', { 'aria-pressed': String(on), 'aria-label': label });
-        b.onclick = () => { const v = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(v)); s[key] = v; NF.Save.save(); if (after) after(v); };
+      const toggle = (label, get, setFn) => {
+        const b = h('button.toggle', { 'aria-pressed': String(!!get()), 'aria-label': label });
+        b.onclick = () => { const v = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', String(v)); setFn(v); NF.Save.save(); };
         return h('div.set-row', h('span', label), b);
       };
-      const confirm = h('div.confirm-box', { hidden: true }, h('p', 'Erase all progress (visited rooms, artifacts, games and your verdict)? This cannot be undone.'),
-        h('button.deco-btn.small.wine', { onclick: () => { NF.Save.reset(); this.closeAll(); NF.Game.setMap('town', NF.Game.maps.town.spawn); this.toast('Progress reset', 'SETTINGS', '↺'); } }, 'Yes, reset'), ' ',
+      const sv = (key, def) => () => (s[key] === undefined ? def : s[key]);
+      const confirm = h('div.confirm-box', { hidden: true }, h('p', 'Erase all progress (visited rooms, artifacts, games, verdict and written answers)? This cannot be undone.'),
+        h('button.deco-btn.small.wine', { onclick: () => { NF.Save.reset(); this.closeAll(); NF.Game.setMap('town', NF.Game.maps.town.spawn); this.toast('Progress reset', 'Settings', '↺'); } }, 'Yes, reset'), ' ',
         h('button.deco-btn.small.ghost', { onclick: () => { confirm.hidden = true; } }, 'Cancel'));
+      const music = NF.CONTENT.MUSIC[NF.CONTENT.ROOM_MUSIC[NF.Game.map.id]];
       const body = h('div',
         h('div.pause-menu',
           h('button.deco-btn', { onclick: () => this.closeTop() }, '▶ Resume'),
-          h('button.deco-btn.ghost', { onclick: () => { this.closeTop(); this.openMap(); } }, 'Map & room directory'),
-          h('button.deco-btn.ghost', { onclick: () => { this.closeTop(); this.openHelp(); } }, 'Controls & help'),
+          h('button.deco-btn.ghost', { onclick: () => { this.closeTop(); this.openMap(); } }, 'Map and room directory'),
+          h('button.deco-btn.ghost', { onclick: () => { this.closeTop(); this.openHelp(); } }, 'Controls and help'),
           h('button.deco-btn.ghost', { onclick: () => { this.closeAll(); NF.Title.show(true); } }, 'Replay the introduction video'),
-          NF.Game.map.id !== 'town' ? h('button.deco-btn.ghost', { onclick: () => { this.closeAll(); NF.Game.toTown(); } }, 'Return to Town Square') : null),
+          NF.Game.map.id !== 'town' ? h('button.deco-btn.ghost', { onclick: () => { this.closeAll(); NF.Game.toTown(); } }, 'Back to the town square') : null),
         h('h3', 'Sound'),
-        h('div.set-grid', slider('Music', 'music'), slider('Sound effects', 'sfx'), slider('Ambient sounds', 'ambience'), slider('Voiceover', 'voice')),
-        h('h3', 'Display & accessibility'),
         h('div.set-grid',
-          toggle('Captions for narration', 'cc', true, (v) => { $('#narr-cc').setAttribute('aria-pressed', String(v)); if (!v) this.showCaption(null); }),
-          toggle('Gold guide arrow', 'guide', true),
-          toggle('Evening lighting', 'lights', true),
-          toggle('Reduce motion', 'reduceMotion', false),
-          toggle('Larger text', 'largeText', false, (v) => { s.textSize = v ? 'large' : 'normal'; this.applySettings(); }),
-          toggle('Closer camera zoom', 'zoomClose', false, (v) => { s.zoom = v ? 'close' : 'normal'; NF.Game.resize(); })),
+          toggle('Background music on', () => A.musicOn, (v) => A.setMusicOn(v)),
+          slider('Music volume', 'music'), slider('Voiceover volume', 'voice'), slider('Sound effects volume', 'sfx'), slider('Ambient sounds volume', 'ambience')),
+        music ? h('p.muted', 'Now playing here: “' + music.title + ',” ' + music.artist + ', ' + music.year + '. Public domain recording.') : null,
+        h('h3', 'Display and accessibility'),
+        h('div.set-grid',
+          toggle('Captions for narration', sv('cc', true), (v) => { s.cc = v; $('#narr-cc').setAttribute('aria-pressed', String(v)); if (!v) this.showCaption(null); }),
+          toggle('Gold guide arrow', sv('guide', true), (v) => { s.guide = v; }),
+          toggle('Evening lighting', sv('lights', true), (v) => { s.lights = v; }),
+          toggle('Reduce motion', sv('reduceMotion', false), (v) => { s.reduceMotion = v; }),
+          toggle('Larger text', () => s.textSize === 'large', (v) => { s.textSize = v ? 'large' : 'normal'; this.applySettings(); }),
+          toggle('Closer camera zoom', () => s.zoom === 'close', (v) => { s.zoom = v ? 'close' : 'normal'; NF.Game.resize(); })),
         h('h3', 'Progress'),
-        h('p', { style: { fontSize: '15px', color: '#d8c69e' } }, 'Progress saves automatically in this browser.'),
+        h('p.muted', 'Progress saves automatically in this browser.'),
         h('button.deco-btn.small.wine', { onclick: () => { confirm.hidden = false; } }, 'Reset progress…'), confirm);
-      this.modal({ kicker: 'PAUSED', title: 'Pause & Settings', body, cls: 'medium', icon: '⚙' });
+      this.modal({ kicker: 'Paused', title: 'Pause and settings', body, cls: 'medium' });
     },
 
     openHelp() {
@@ -444,36 +512,37 @@
           h('div.keys',
             h('span', h('kbd', 'W'), h('kbd', 'A'), h('kbd', 'S'), h('kbd', 'D')), h('span', 'Walk (or the arrow keys). Hold Shift to hurry.'),
             h('span', h('kbd', 'E'), h('kbd', 'Space')), h('span', 'Examine, talk, play, or enter a door'),
-            h('span', h('kbd', 'M')), h('span', 'Map, room directory & fast travel'),
+            h('span', h('kbd', '1'), h('kbd', '2'), h('kbd', '3')), h('span', 'Choose a question in a conversation'),
+            h('span', h('kbd', 'M')), h('span', 'Map, room directory and fast travel'),
             h('span', h('kbd', 'N')), h('span', 'Play this room’s narration (with captions)'),
-            h('span', h('kbd', 'Esc')), h('span', 'Close a window, or pause & settings'),
-            h('span', h('kbd', 'H')), h('span', 'This help screen')),
-          h('p', { style: { marginTop: '12px', fontSize: '15px', color: '#d8c69e' } }, 'On a phone or tablet, use the round pad to walk and the E button to interact. You can also click the prompt at the bottom of the screen.')),
+            h('span', h('kbd', 'Esc')), h('span', 'Close a window, or open pause and settings')),
+          h('p.muted', 'On a phone or tablet, use the round pad to walk and the E button to interact. You can also click the “Press E” prompt.')),
         h('div',
           h('h3', 'How the museum works'),
-          h('div.tip', '✦ Sparkles mark artifacts you haven’t examined. Each opens an archive file with its date, creator, source type and citation.'),
-          h('div.tip', '★ A gold star marks each room’s mini-game. Every choice is followed by what really happened.'),
-          h('div.tip', '➜ Follow the gold arrow. Visit Exhibits 1–6 in order, then deliver your verdict at the Courthouse.'),
-          h('h3', 'Troubleshooting'),
-          h('div.tip', 'Stuck or lost? Press M and use “Go” to jump to any exhibit. Inside a room, walk onto the red EXIT mat at the bottom.'),
-          h('div.tip', 'No sound? Open Esc → Sound. The archival Harding recording streams from the Library of Congress and needs internet.'),
-          h('div.tip', 'Text too small? Esc → Larger text. Prefer less movement? Esc → Reduce motion.')));
-      this.modal({ kicker: 'HELP DESK', title: 'How to Play', body, cls: 'medium', icon: '?' });
+          h('ul.plain',
+            h('li', 'A sparkle ✦ means you have not looked at that exhibit yet. A small check ✓ means you already have.'),
+            h('li', 'A speech bubble over a person means you can talk to them and choose what to ask.'),
+            h('li', 'A gold star ★ marks each room’s mini-game.'),
+            h('li', 'The sign over every door shows the exhibit name, with a check once you have been inside.')),
+          h('h3', 'If you get stuck'),
+          h('ul.plain',
+            h('li', 'Press M and click “Go” to jump to any building.'),
+            h('li', 'Inside a room, walk onto the red EXIT mat at the bottom.'),
+            h('li', 'No sound? Open Esc, then Sound. The Harding recording needs an internet connection.'))));
+      this.modal({ kicker: 'Help desk', title: 'How to play', body, cls: 'medium' });
     },
 
-    /* ---------- reference room panels ---------- */
+    /* ---------- reference library panels ---------- */
     openBibliography() {
       const C = this.C;
       let filter = 'all', q = '';
       const list = h('ul.bib-list');
-      const sorted = C.SOURCES.slice().sort((a, b) => a.mla.replace(/<[^>]+>|[“”"]/g, '').localeCompare(b.mla.replace(/<[^>]+>|[“”"]/g, '')));
+      const strip = (x) => x.replace(/<[^>]+>|[“”"]/g, '');
+      const sorted = C.SOURCES.slice().sort((a, b) => strip(a.mla).localeCompare(strip(b.mla)));
       const render = () => {
         list.innerHTML = '';
         sorted.filter((s) => (filter === 'all' || s.type === filter) && (!q || (s.mla + s.use).toLowerCase().includes(q))).forEach((s) => {
-          const li = h('li');
-          li.append(h('span.src-type.' + s.type, { style: { textIndent: 0 } }, s.type.toUpperCase()), ' ');
-          li.append(h('span', { html: s.mla + ' ' }), h('a', { href: s.url, target: '_blank', rel: 'noopener' }, s.url), h('span.use', 'Used in the museum for: ', h('span', { html: s.use })));
-          list.append(li);
+          list.append(h('li', h('span.src-type.' + s.type, s.type), ' ', h('span', { html: s.mla + ' ' }), h('a', { href: s.url, target: '_blank', rel: 'noopener' }, s.url), h('span.use', 'Used for: ', h('span', { html: s.use }))));
         });
         if (!list.children.length) list.append(h('li', 'No sources match.'));
       };
@@ -482,14 +551,14 @@
       render();
       const copy = h('button.deco-btn.small', { onclick: () => this.copyBibliography(sorted) }, 'Copy all (for Word)');
       const body = h('div',
-        h('p', { html: 'Works Cited (MLA 9th edition). <b>Primary</b> sources were created during the period; <b>secondary</b> sources interpret it later; <b>tertiary</b> sources are reference summaries. A Word-ready copy is also saved in the project at <code>docs/BIBLIOGRAPHY.html</code>.' }),
+        h('p', { html: 'Works Cited, MLA 9th edition. <b>Primary</b> sources were created during the period; <b>secondary</b> sources interpret it later; <b>tertiary</b> sources are reference summaries. A Word-ready copy is also saved in the project as <code>docs/BIBLIOGRAPHY.html</code>.' }),
         h('div.bib-tools', chips, search), list);
-      this.modal({ kicker: 'CARD CATALOG', title: 'Works Cited', body, cls: 'paper', foot: copy, icon: '📚' });
+      this.modal({ kicker: 'Card catalog', title: 'Works cited', body, cls: 'paper', foot: copy });
     },
     copyBibliography(sorted) {
       const html = '<h1 style="text-align:center">Works Cited</h1>' + sorted.map((s) => `<p style="padding-left:0.5in;text-indent:-0.5in;line-height:2">${s.mla} ${s.url}</p>`).join('');
       const text = 'Works Cited\n\n' + sorted.map((s) => s.mla.replace(/<[^>]+>/g, '') + ' ' + s.url).join('\n\n');
-      const done = () => this.toast('Bibliography copied — paste into Word', 'COPIED', '✓');
+      const done = () => this.toast('Bibliography copied. Paste it into Word.', 'Copied', '✓');
       try {
         if (navigator.clipboard && window.ClipboardItem) {
           navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]).then(done, () => this.copyFallback(text, done));
@@ -498,37 +567,46 @@
     },
     copyFallback(text, done) {
       const ta = h('textarea', { style: { position: 'fixed', left: '-9999px' } }); ta.value = text; document.body.append(ta); ta.select();
-      try { document.execCommand('copy'); done(); } catch (e) { this.toast('Copy blocked — use docs/BIBLIOGRAPHY.html instead', 'COPY', '!'); }
+      try { document.execCommand('copy'); done(); } catch (e) { this.toast('Copy was blocked. Use docs/BIBLIOGRAPHY.html instead.', 'Copy', '!'); }
       ta.remove();
+    },
+    musicCredits() {
+      const C = this.C;
+      return h('div', h('h3', 'Background music'),
+        h('p', 'Every track is a genuine jazz recording made between 1920 and 1924. Sound recordings published before 1926 are in the public domain in the United States. Files come from Wikimedia Commons.'),
+        h('ul.plain', Object.entries(C.MUSIC).map(([k, m]) => {
+          const where = Object.entries(C.ROOM_MUSIC).filter(([, v]) => v === k).map(([r]) => (r === 'town' ? 'Town square' : C.ROOMS[r].num <= 6 ? 'Exhibit ' + C.ROOMS[r].num : C.ROOMS[r].building)).join(', ');
+          return h('li', h('b', '“' + m.title + '”'), ', ' + m.artist + ', ' + m.year + '. ', h('span.muted', 'Plays in: ' + where + '. '), h('a', { href: m.url, target: '_blank', rel: 'noopener' }, 'Source ↗'));
+        })));
     },
     openCredits() {
       const C = this.C;
-      const body = h('div',
+      const body = h('div.prose',
         h('p', 'The Normalcy Files was created by:'),
-        h('div.team-grid', C.TEAM.map((t) => h('div.team-card', h('div.tr', t.role.toUpperCase()), h('div.tn', t.name), h('p', t.duties)))),
-        h('h3', 'Credits & acknowledgements'),
-        h('p', 'Archival photographs, newspapers and the 1920 Harding recording: Library of Congress (Prints & Photographs Division; Chronicling America; Nation’s Forum Collection). Statutes: U.S. Government Publishing Office (GovInfo).'),
-        h('p', 'All pixel art, the town, characters, music and sound effects were generated in code for this project and are modern illustrations, not historical artifacts.'),
-        h('p', 'Fonts: Limelight, Pixelify Sans, Silkscreen, Special Elite and EB Garamond (SIL Open Font License / Apache License).'),
-        h('p', { style: { fontSize: '14px', color: '#6a5a48' } }, 'To add your names, edit the TEAM list at the top of js/content.js.'));
-      this.modal({ kicker: 'TEAM', title: 'Credits', body, cls: 'paper medium', icon: '✦' });
+        h('div.team-grid', C.TEAM.map((t) => h('div.team-card', h('div.tr', t.role), h('div.tn', t.name), h('p', t.duties)))),
+        h('h3', 'Acknowledgements'),
+        h('p', 'Archival photographs, newspapers, court pages and the 1920 Harding recording: Library of Congress (Prints and Photographs Division; Chronicling America; Nation’s Forum Collection; U.S. Reports). Laws: U.S. Government Publishing Office (GovInfo). Harding transcript: Miller Center, University of Virginia.'),
+        this.musicCredits(),
+        h('h3', 'Made for this project'),
+        h('p', 'The pixel-art town, rooms and characters, the diagrams and the sound effects were made in code for this project. They are modern illustrations, not historical artifacts. Every conversation is written by the museum team and spoken by fictional guides or historical composites.'),
+        h('p', 'Fonts: Limelight, Pixelify Sans, Silkscreen, Special Elite and EB Garamond (open font licenses).'),
+        h('p.muted', 'To add your names, edit the TEAM list at the top of js/content.js.'));
+      this.modal({ kicker: 'Team', title: 'Credits', body, cls: 'paper medium' });
     },
-    openEQs() {
-      const C = this.C;
-      const body = h('div', h('p', 'These questions run through the whole museum. Here is where each one appears:'),
-        Object.entries(C.EQS).map(([k, q]) => {
-          const arts = Object.entries(C.ARTIFACTS).filter(([, a]) => (a.eq || []).includes(k));
-          return h('div.g-card', h('div.g-kicker', 'ESSENTIAL QUESTION ' + k), h('p', { style: { fontWeight: 600, margin: '4px 0 8px' } }, q),
-            h('div', { style: { fontSize: '14.5px' } }, 'Explored in: ', arts.map(([, a], i) => [i ? ' · ' : '', `${a.title} (${C.ROOMS[a.room] ? 'Exhibit ' + C.ROOMS[a.room].num : 'Town'})`]),
-              k === 'A1' ? ' · Mini-game: Solve the Teapot Dome Case' : k === 'C1' ? ' · Mini-game: Balancing the Budget' : k === 'A2' ? ' · Mini-game: Who Experienced Normalcy?' : k === 'D1' ? ' · Mini-game: Repair the International Economy' : ' · Final verdict at the Courthouse'));
-        }));
-      this.modal({ kicker: 'REFERENCE LIBRARY', title: 'Essential Questions', body, cls: 'medium game-modal', icon: '?' });
+    openBigQuestions() {
+      const C = this.C, Q = C.BIG_QUESTIONS;
+      const body = h('div.prose',
+        h('p', 'Two questions run through the whole museum. You will answer them in writing at the Courthouse.'),
+        h('div.bq', h('div.bq-n', '1'), h('div', h('p.bq-q', Q.q1), h('p.muted', 'Look especially at Exhibit 2 (Harding’s policies), Exhibit 3 (Teapot Dome) and Exhibit 4 (Coolidge and the farmers).'))),
+        h('div.bq', h('div.bq-n', '2'), h('div', h('p.bq-q', Q.q2), h('p.muted', 'Look especially at Exhibit 1 (the Red Scare) and Exhibit 6 (immigration, free speech and civil rights).'))));
+      this.modal({ kicker: 'Reference library', title: 'The two big questions', body, cls: 'paper narrow' });
     },
     openScripts() {
       const C = this.C;
-      const body = h('div', h('h3', 'Help-desk video'), C.HELPDESK.map((l) => h('p', l)),
-        ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'].map((id) => [h('h3', `Exhibit ${C.ROOMS[id].num}: ${C.ROOMS[id].title}`), C.ROOMS[id].narration.map((l) => h('p', l))]));
-      this.modal({ kicker: 'TRANSCRIPTS', title: 'Narration Scripts', body, cls: 'paper medium', icon: '✎' });
+      const body = h('div.prose', h('h3', 'Help-desk video'), C.HELPDESK.map((l) => h('p', l)),
+        ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'].map((id) => [h('h3', `Exhibit ${C.ROOMS[id].num}: ${C.ROOMS[id].title}`), C.ROOMS[id].narration.map((l) => h('p', l))]),
+        this.musicCredits());
+      this.modal({ kicker: 'Transcripts', title: 'Narration scripts and music credits', body, cls: 'paper medium' });
     },
 
     /* ---------- touch ---------- */
@@ -583,7 +661,7 @@
       this.video.addEventListener('play', () => $('#video-play').classList.add('playing'));
       this.video.addEventListener('pause', () => $('#video-play').classList.remove('playing'));
       $('#video-play').onclick = () => this.togglePlay();
-      $('#video-transcript').onclick = () => UI.modal({ kicker: 'HELP DESK', title: 'Video Transcript', body: h('div', C.HELPDESK.map((l) => h('p', l))), cls: 'narrow' });
+      $('#video-transcript').onclick = () => UI.modal({ kicker: 'Help desk', title: 'Video transcript', body: h('div', C.HELPDESK.map((l) => h('p', l))), cls: 'narrow' });
       const cc = $('#video-cc');
       cc.onclick = () => { const on = cc.getAttribute('aria-pressed') !== 'true'; cc.setAttribute('aria-pressed', String(on)); cc.textContent = on ? 'Captions on' : 'Captions off'; if (!on) $('#video-captions').hidden = true; this.trackMode(); };
       $('#enter-btn').onclick = () => this.enter();
@@ -667,15 +745,16 @@
         NF.Game.running = true;
         UI.showGameUi(true);
         UI.onMapChange(NF.Game.map);
-        if (NF.Audio && NF.Game.map) NF.Audio.setScene(NF.Game.map.music, NF.Game.map.ambience);
+        if (NF.Audio && NF.Game.map) NF.Audio.setScene(NF.Game.map.id, NF.Game.map.ambience);
         if (!NF.Save.data.introSeen) {
           NF.Save.data.introSeen = true; NF.Save.save();
-          setTimeout(() => UI.dialogue({ name: 'Docent Dot (fictional guide)', look: 'guide', lines: NF.CONTENT.NPCS[0].lines }), 400);
+          setTimeout(() => UI.talk('guide'), 400);
         }
       }, 650);
     },
     show() {
       UI.closeAll();
+      if (NF.Audio) NF.Audio.stopTrack();
       NF.Game.running = false;
       UI.showGameUi(false);
       this.el.hidden = false;

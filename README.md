@@ -4,11 +4,15 @@ A playable, pixel-art history museum about the Roaring Twenties and the promise 
 
 **Central question:** Did America's return to normalcy restore stability after World War I, or did it hide deeper problems in American government and society?
 
+**The two big questions** that run through the museum:
+1. How did the federal government's relationship with business and the public interest shape America's return to normalcy?
+2. Did the political and economic choices of the 1920s protect freedom and opportunity equally for all Americans?
+
 ---
 
 ## 1. How to run it
 
-**Quickest way:** double-click `index.html`. It opens in Chrome, Edge, Firefox or Safari and works offline. The one exception is the archival Harding recording, which streams from the Library of Congress and needs internet.
+**Quickest way:** double-click `index.html`. It opens in Chrome, Edge, Firefox or Safari and works offline. The one exception is the archival Harding recording, which streams from the Library of Congress and needs internet. Its full transcript is always shown, even offline.
 
 **Recommended way (needed for the video captions file):** run a local web server from this folder:
 
@@ -16,24 +20,29 @@ A playable, pixel-art history museum about the Roaring Twenties and the promise 
 python -m http.server 8000
 ```
 
-Then open **http://localhost:8000**. If Python isn't installed, any static server works, for example `npx serve`.
-
-There is nothing to build or install. The game is plain HTML, CSS and JavaScript.
+Then open **http://localhost:8000**. Any static server works. There is nothing to build or install.
 
 ## 2. How to play
 
 | Key | Action |
 |---|---|
-| **W A S D** / arrow keys | Walk (hold **Shift** to hurry) |
-| **E** / **Space** | Examine, talk, play, enter a door |
+| **W A S D** or arrow keys | Walk (hold **Shift** to hurry) |
+| **E** or **Space** | Examine, talk, play, or enter a door |
+| **1, 2, 3, 4** | Choose a question during a conversation |
 | **M** | Map, room directory and fast travel |
-| **N** | Room narration (captions + transcript) |
-| **Esc** | Close a window / pause and settings |
-| **H** | Help screen |
+| **N** | Room narration (with captions and transcript) |
+| **Esc** | Close a window, or open pause and settings |
 
-Phones and tablets get an on-screen joystick and an **E** button.
+Phones and tablets get an on-screen joystick and an **E** button. You can also click the "Press E" prompt.
 
-**Route:** the gold arrow at the top of the screen always points to the next stop.
+**What the markers mean**
+- ✦ **Sparkle:** an exhibit you have not examined yet. A small ✓ appears once you have.
+- 💬 **Speech bubble:** a person you can talk to. You pick the questions; each one gets a different answer.
+- ★ **Gold star:** the room's mini-game.
+- **Door signs** name every exhibit and show ✓ after you visit.
+- The **gold arrow** at the top always points to your next stop. The HUD shows a one-line objective for each room.
+
+**Route:** the town square is the museum hub. Visit Exhibits 1 to 6 (clockwise around the square), then the Courthouse. The Library holds the sources.
 
 1. Union Station: The Aftermath of World War I
 2. The White House: Inside Harding's White House
@@ -41,89 +50,112 @@ Phones and tablets get an on-screen joystick and an **E** button.
 4. Treasury & Press Hall: The Age of Calvin Coolidge
 5. Hall of Nations: America and the World
 6. Community Hall: Normalcy for Whom?
-7. **Courthouse:** Judge Normalcy, the final evidence-based verdict
-8. **Public Library:** Reference room with the bibliography, credits, scripts and Essential Questions
+7. **Courthouse:** your verdict on normalcy, plus written answers with feedback
+8. **Public Library:** bibliography, credits, scripts, music credits and the two big questions
 
-Inside every room:
-- ✦ **Sparkles** mark artifacts you haven't examined yet (30 in total).
-- ★ A **gold star** marks the room's mini-game (6 in total).
-- The red **EXIT** mat at the bottom leads back to town.
+Inside every room, the red **EXIT** mat at the bottom leads back to the square. Progress saves automatically in the browser (Esc, then "Reset progress" to start over).
 
-Progress saves automatically in your browser. You can reset it under Esc → Settings.
+## 3. The Courthouse written answers
 
-## 3. Replacing the placeholders (your group's media)
+Visitors answer three questions in writing and press **Submit answer**. Each answer gets a score out of 4 and specific suggestions:
+
+| Criterion | What earns the point |
+|---|---|
+| Historical accuracy | Uses real history from the museum and avoids common errors (for example "Harding took the oil bribes" or "Teapot Dome is in California") |
+| Specific evidence | Names at least one specific person, law, date, event or artifact |
+| Reasoning | States a claim and explains how the evidence supports it ("because," "this shows," and so on) |
+| Connection to normalcy | Ties the argument back to normalcy, public trust, the public interest, or equal opportunity |
+
+This is an **automatic rubric check** based on keywords and evidence. It is not a teacher and not an AI. Any conclusion can earn full marks if it is supported. Answers and feedback are saved so they can be revised and resubmitted. To change the questions, keywords or error checks, edit `WRITTEN` and `RED_FLAGS` in `js/content.js`.
+
+## 4. Music
+
+Every area plays a different genuine jazz recording from 1920 to 1924, listed below. Sound recordings published before 1926 are in the U.S. public domain. The files came from Wikimedia Commons and were converted to small mono MP3s in `media/music/`.
+
+| Area | Recording |
+|---|---|
+| Town square | "Riverboat Shuffle," Bix Beiderbecke and the Wolverine Orchestra (1924) |
+| Exhibit 1 | "Krooked Blues," King Oliver's Creole Jazz Band (1923) |
+| Exhibit 2, Library | "Modulations," Clarence M. Jones, piano (1923) |
+| Exhibit 3 | "Limehouse Blues," Arthur Lange and His Orchestra (1924) |
+| Exhibit 4 | "Whispering," Paul Whiteman and His Ambassador Orchestra (1920) |
+| Exhibit 5 | "On the Alamo," Benson Orchestra of Chicago (1922) |
+| Exhibit 6, Courthouse | "St. Louis Blues," Handy's Memphis Blues Band (1922) |
+
+Tracks never overlap: the old one fades out before the next begins. Music lowers automatically while narration or the Harding recording plays. Settings (Esc) include music on/off, music volume, voiceover volume, sound-effect volume and ambient volume. If a music file is missing, the game simply stays quiet.
+
+## 5. Replacing the placeholders (your group's media)
 
 | What | Where to put it | What happens if it's missing |
 |---|---|---|
-| Help-desk video | `media/video/helpdesk.mp4` | Title screen shows a "coming soon" card that plays a text-to-speech preview of the script, with captions |
+| Help-desk video | `media/video/helpdesk.mp4` | The title screen plays a computer-voice preview of the script, with captions |
 | Video captions | `media/captions/helpdesk.vtt` | Captions fall back to automatic timing from the script |
-| Room narrations | `media/audio/room1.mp3` … `room6.mp3` | Narration panel plays a text-to-speech preview, with captions |
-| Team names | `js/content.js` → `TEAM` list (top of the file) | Shows "[Your name here]" |
+| Room narrations | `media/audio/room1.mp3` … `room6.mp3` | The narration panel uses a computer voice, with captions |
+| Team names | `js/content.js`, `TEAM` list at the top | Shows "[Your name here]" |
 
-Scripts for all recordings are in **`docs/SCRIPTS.md`**. The help-desk video runs about 65–75 seconds, and each room narration about 60–75 seconds at a natural pace.
+All scripts are in **`docs/SCRIPTS.md`**: the help-desk video runs about 70 seconds and each room narration about 60–75 seconds at a natural pace. If you change any wording while recording, update the matching text in `js/content.js`, then run `node tools/build-docs.js` to regenerate the scripts, captions and bibliography.
 
-**Tips**
-- Export audio as MP3 and video as MP4 (H.264). Keep the exact file names.
-- After recording the video, open `media/captions/helpdesk.vtt` in any text editor and adjust the times (`00:00:04.500 --> 00:00:09.000`) to match when each line is spoken.
-- If you change any wording while recording, update the matching text in `js/content.js` so the captions and transcripts still match. Then run `node tools/build-docs.js` to regenerate the scripts, captions and bibliography.
+## 6. Editing the historical content
 
-## 4. Editing the historical content
+Everything historical lives in **`js/content.js`**: rooms, narration, artifacts, conversations (`PEOPLE`), mini-game questions, courthouse questions, evidence for the verdict, sources, music and credits. You can edit text there without touching any game code.
 
-Everything historical lives in **`js/content.js`**: rooms, narration, artifacts, mini-game questions, evidence for the verdict, sources and credits. You can edit text there without touching any game code.
+- **Artifacts** have a short summary, background, "what this evidence tells us," "limits of this source," "why it matters," optional "read more" paragraphs, a question, images with captions, credits and alt text, and source IDs.
+- **Conversations:** each character has a greeting and two to four questions. Each answer can cite a source ID. Fictional guides and historical composites are labeled as such.
+- **House style:** no em dashes. Use commas, periods, colons or parentheses.
+- To add an archival image, put the file in `assets/archive/` and add it to an artifact's `images` list with a caption, credit and alt text.
 
-- **Artifacts** have a title, date, creator, source type, background, "why it matters", a historian's question, Essential Question tags, and source IDs that link to the bibliography.
-- **Sources** are in MLA 9th edition style. Every artifact cites its sources by ID, and the game checks those IDs.
-- To add an archival image, put the file in `assets/archive/` and reference it from an artifact's `media` field.
-
-## 5. Deliverables in this folder
+## 7. Deliverables in this folder
 
 | Deliverable | File |
 |---|---|
-| Playable game | `index.html` (+ `js/`, `css/`, `assets/`) |
+| Playable game | `index.html` (plus `js/`, `css/`, `assets/`, `media/`) |
 | Help-desk video script | `docs/SCRIPTS.md` (top section) |
 | Six narration scripts | `docs/SCRIPTS.md` |
-| Word-ready bibliography (MLA) | `docs/BIBLIOGRAPHY.html`: open it, then Ctrl+A, Ctrl+C, paste into Word. There is also an in-game "Copy all" button in the Library. |
+| Word-ready bibliography (MLA) | `docs/BIBLIOGRAPHY.html`: open it, press Ctrl+A and Ctrl+C, then paste into Word. The Library's card catalog also has a "Copy all" button. |
 | Bibliography (plain text) | `docs/BIBLIOGRAPHY.md` |
-| Placeholder instructions | Section 3 of this README |
 
-## 6. Historical accuracy notes (for the Main Researcher)
+## 8. Historical accuracy notes (for the Main Researcher)
 
 - **Verified quotations.** Each one was checked against its original source:
-  - Harding's "Readjustment" passage: Library of Congress catalog record
-  - Coolidge's 1925 newspaper editors' speech: American Presidency Project
-  - Coolidge's 1925 inaugural address: Miller Center
-  - *Gitlow v. New York*: Cornell Legal Information Institute
-  - Kellogg-Briand Pact: Avalon Project, Yale
-  - The Budget and Accounting Act, Revenue Act of 1921, Tariff Act of 1922, and the 1921 and 1924 immigration laws: GovInfo
-- **Archival materials are real.** There are 18 Library of Congress photographs and 3 Chronicling America front pages: the *New York Herald* (Nov. 3, 1920) and the *Evening Star* (Jan. 25 and Feb. 13, 1924). Restricted-rights images (for example, Benjamin Gitlow's portrait) were left out and replaced with clearly labeled pixel illustrations plus a link.
-- **Everything made by us is labeled.** The town, characters, maps and diagrams are modern illustrations. Townspeople and mini-game profiles are marked as fictional or composite. Simulations show their rules and say they are simplified.
-- **Careful claims.** The game separates corruption *in* Harding's administration from any evidence about Harding himself (there is no evidence he took oil bribes). It also does not claim Coolidge's policies alone caused the Great Depression, which began after his term.
-- **Class materials not yet included.** The following could not be accessed while building, so they are **not** cited: AP Henretta Ch. 21, Savvas, GALE, *ABC News: The Century*, McGraw-Hill, and *American Issues*. If your group uses them, add them to `SOURCES` in `js/content.js` and run `node tools/build-docs.js`. The ushistory.org reading *is* cited.
+  - Harding's "Readjustment" recording: the full Miller Center transcription, checked sentence by sentence against the Library of Congress audio with speech recognition. The disc is complete (4 min 22 s), with nothing cut.
+  - Coolidge, 1925 newspaper editors' speech: American Presidency Project. Coolidge, 1925 inaugural: Miller Center.
+  - *Gitlow v. New York*: Cornell Legal Information Institute and the official *U.S. Reports* pages. The majority quotation uses an ellipsis to omit one phrase, which is marked.
+  - Kellogg-Briand Pact: Avalon Project, Yale. All five laws: the Statutes at Large on GovInfo.
+- **Archival materials.** There are 27 Library of Congress photographs and prints, 3 Chronicling America front pages, 3 pages from *U.S. Reports*, and 5 page scans from the Statutes at Large. The Doughboy popup shows the real Wheeling, West Virginia memorial (dedicated May 30, 1931).
+  - Benjamin Gitlow's Library of Congress portrait record (loc.gov/item/2002711324) has no digitized image and its rights are "not evaluated," so the exhibit shows the Supreme Court's printed opinion instead.
+- **Labels.** Modern illustrations, the simplified maps and diagrams, fictional guides, historical composites and simulations are all labeled.
+- **Careful claims.**
+  - The game separates corruption *in* Harding's administration from any claim about Harding himself (there is no evidence he took oil bribes).
+  - It does not claim Coolidge's policies alone caused the Great Depression, which began after his term.
+  - It keeps Harding's policies (1921–23) and Coolidge's (1923–29) distinct.
+- **Class materials not yet included.** These could not be accessed while building, so they are **not** cited: AP Henretta Ch. 21, Savvas, GALE, *ABC News: The Century*, McGraw-Hill, and *American Issues*. If your group uses them, add them to `SOURCES` in `js/content.js` and run `node tools/build-docs.js`. The ushistory.org reading *is* cited.
 
-## 7. Project structure
+## 9. Project structure
 
 ```
-index.html            – page shell: title screen, HUD, overlays
-css/style.css         – Art Deco / pixel interface styles
-css/fonts.css         – locally bundled fonts (work offline)
-js/content.js         – ALL historical content, sources, team credits
-js/art.js             – procedural pixel-art generator (sprites, buildings, furniture)
-js/world.js           – town and room layouts, collisions, interactables
-js/engine.js          – game loop, movement, camera, traffic, train, lighting, saving
-js/audio.js           – original synthesized music, ambience and sound effects
-js/ui.js              – HUD, dialogue, map, settings, narration player, title screen
-js/artifacts.js       – archive-file viewer and media widgets
-js/minigames.js       – six mini-games + the final verdict
-js/main.js            – startup
-assets/archive/       – Library of Congress photographs and newspapers
-assets/fonts/         – font files (SIL Open Font License)
-media/                – your video, narration and captions go here
-docs/                 – scripts and bibliography
-tools/build-docs.js   – regenerates docs from content.js
+index.html            page shell: title screen, HUD, overlays
+css/style.css         museum and pixel interface styles
+css/fonts.css         locally bundled fonts (work offline)
+js/content.js         ALL historical content, conversations, questions, sources, music, credits
+js/art.js             procedural pixel-art generator (sprites, buildings, furniture, maps)
+js/world.js           town and room layouts, collisions, interactables, characters
+js/engine.js          game loop, movement, camera, traffic, train, lighting, door signs, saving
+js/audio.js           music player (one track at a time), ambience and sound effects
+js/ui.js              HUD, conversations, map, settings, narration player, title screen
+js/artifacts.js       archive window: gallery, transcript, documents, evidence board
+js/minigames.js       six mini-games, the verdict, and the written-answer rubric
+js/main.js            startup
+assets/archive/       Library of Congress images, newspapers, court pages, statute pages
+assets/fonts/         font files (open licenses)
+media/music/          public-domain jazz recordings
+media/                your video, narration and captions go here
+docs/                 scripts and bibliography
+tools/build-docs.js   regenerates docs from content.js
 ```
 
-## 8. Credits
+## 10. Credits
 
-- Archival media: Library of Congress (Prints & Photographs Division; Chronicling America; Nation's Forum Collection). Statutes: GovInfo.
-- All pixel art, music and sound effects were generated in code for this project. No copyrighted music or recordings are used.
-- Fonts: Limelight, Pixelify Sans, Silkscreen, Special Elite, EB Garamond (Google Fonts, open licenses).
+- Archival media: Library of Congress (Prints and Photographs Division; Chronicling America; Nation's Forum Collection; U.S. Reports). Statutes: GovInfo. Harding transcript: Miller Center, University of Virginia.
+- Music: public-domain recordings (1920–1924) via Wikimedia Commons, listed above.
+- The pixel art, diagrams and sound effects were made in code for this project.
+- Fonts: Limelight, Pixelify Sans, Silkscreen, Special Elite, EB Garamond (open licenses).

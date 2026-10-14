@@ -1,15 +1,24 @@
 /* =====================================================================
-   THE NORMALCY FILES — artifacts.js
-   The archive-file window that opens for every artifact, plus its media
-   widgets: photos with lightbox zoom, newspaper viewer, archival audio,
-   documents, timelines, the evidence board, diagrams, maps, comparisons.
+   THE NORMALCY FILES: artifacts.js
+   The archive window that opens for every artifact, plus its media:
+   image gallery with enlargement, newspaper viewer, archival audio with
+   a synchronized transcript, documents, timelines, the evidence board,
+   diagrams, maps and comparisons.
    ===================================================================== */
 (function () {
   'use strict';
   const NF = (window.NF = window.NF || {});
   const h = (...a) => NF.h(...a);
+  // append that silently skips null/undefined/false (prevents stray "null" text)
+  const add = (el, ...kids) => { kids.flat(Infinity).forEach((k) => { if (k !== null && k !== undefined && k !== false) el.append(k); }); return el; };
+  NF.add = add;
 
-  const TYPE_LABEL = { primary: 'PRIMARY SOURCE', secondary: 'SECONDARY SOURCE', illustration: 'MODERN ILLUSTRATION', composite: 'HISTORICAL COMPOSITE' };
+  const TYPE_TEXT = {
+    primary: ['Primary source', 'an original record (document, image or recording)'],
+    secondary: ['Secondary source', 'an explanation written later'],
+    illustration: ['Modern illustration', 'made for this museum'],
+    composite: ['Historical composite', 'based on real conditions'],
+  };
 
   /* ---------- zoom / pan viewer used by newspapers and the lightbox ---------- */
   function zoomViewer(src, alt, fit) {
@@ -23,7 +32,7 @@
       y = ih <= bh ? (bh - ih) / 2 : Math.min(0, Math.max(bh - ih, y));
     };
     const reset = () => {
-      if (!img.naturalWidth) return;
+      if (!img.naturalWidth || !box.clientWidth) return;
       const bw = box.clientWidth, bh = box.clientHeight;
       base = fit === 'contain' ? Math.min(bw / img.naturalWidth, bh / img.naturalHeight) : bw / img.naturalWidth;
       s = base; x = 0; y = 0; clamp(); apply();
@@ -33,7 +42,7 @@
       x = cx - ((cx - x) * ns) / s; y = cy - ((cy - y) * ns) / s; s = ns; clamp(); apply();
     };
     img.onload = reset;
-    new ResizeObserver(() => reset()).observe(box);
+    if (window.ResizeObserver) new ResizeObserver(() => reset()).observe(box);
     box.addEventListener('wheel', (e) => { e.preventDefault(); const r = box.getBoundingClientRect(); zoomAt(e.deltaY < 0 ? 1.2 : 1 / 1.2, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
     let drag = null;
     box.addEventListener('pointerdown', (e) => { if (e.target.closest('button')) return; drag = { px: e.clientX, py: e.clientY, x, y }; box.setPointerCapture(e.pointerId); box.style.cursor = 'grabbing'; });
@@ -45,84 +54,118 @@
       h('button', { title: 'Zoom out', 'aria-label': 'Zoom out', onclick: () => zoomAt(1 / 1.4, box.clientWidth / 2, box.clientHeight / 3) }, '−'),
       h('button', { title: 'Reset view', 'aria-label': 'Reset view', onclick: reset }, '⟲'));
     box.append(img, tools);
-    img.onerror = () => { box.innerHTML = ''; box.append(h('div', { style: { color: '#f4ead2', padding: '20px' } }, 'Image could not be loaded. Use the source link in the citation.')); };
+    img.onerror = () => { box.innerHTML = ''; box.append(h('div.img-missing', 'This image could not be loaded. Use the source link in the citations.')); };
     return box;
   }
-  function lightbox(src, caption) {
+  function lightbox(src, caption, alt) {
     const root = document.querySelector('#modal-root');
     const lb = h('div.lightbox', { role: 'dialog', 'aria-label': 'Enlarged image' });
-    const close = h('button.deco-btn.small.lb-close', { onclick: () => NF.UI.closeTop() }, 'Close ✕');
-    lb.append(close, zoomViewer(src, caption, 'contain'), caption ? h('div.lb-cap', caption) : null);
+    lb.append(h('button.deco-btn.small.lb-close', { onclick: () => NF.UI.closeTop() }, 'Close ✕'), zoomViewer(src, alt || caption, 'contain'));
+    if (caption) lb.append(h('div.lb-cap', caption));
     root.append(lb);
     NF.UI.modals.push({ wrap: lb });
     NF.Game.paused = true;
   }
   NF.lightbox = lightbox;
 
-  function photo(src, caption, tag) {
-    const img = h('img', { src, alt: caption || '', loading: 'lazy', onclick: () => lightbox(src, caption) });
-    img.onerror = () => { img.replaceWith(h('div', { style: { padding: '30px', color: '#e9dcbc', textAlign: 'center' } }, 'Image unavailable offline — see the source link below.')); };
-    return h('figure.photo', { style: { margin: 0 } }, tag !== false ? h('span.archival-tag', tag || 'ARCHIVAL PHOTOGRAPH') : null, img,
-      h('button.deco-btn.small.zoom-btn', { onclick: () => lightbox(src, caption), 'aria-label': 'Enlarge image' }, '⤢ Enlarge'),
-      caption ? h('figcaption', caption) : null);
+  /* ---------- image gallery: one large image, thumbnails, caption + credit ---------- */
+  function gallery(images) {
+    if (!images || !images.length) return null;
+    let cur = 0;
+    const fig = h('figure.gal');
+    const frame = h('div.gal-frame');
+    const cap = h('figcaption');
+    const thumbs = images.length > 1 ? h('div.gal-thumbs') : null;
+    const show = (i) => {
+      cur = i;
+      const im = images[i];
+      frame.innerHTML = '';
+      const img = h('img', { src: im.src, alt: im.alt || im.caption || '', loading: 'lazy', title: 'Click to enlarge' });
+      img.onclick = () => lightbox(im.src, im.caption, im.alt);
+      img.onerror = () => { frame.innerHTML = ''; frame.append(h('div.img-missing', 'This image could not be loaded. ', im.credit ? 'Source: ' + im.credit + '.' : '')); };
+      frame.append(img, h('button.enlarge', { onclick: () => lightbox(im.src, im.caption, im.alt), 'aria-label': 'Enlarge image' }, 'Enlarge ⤢'));
+      cap.innerHTML = '';
+      add(cap, h('span', im.caption), im.credit ? h('span.credit', ' ' + im.credit + '.') : null);
+      if (thumbs) [...thumbs.children].forEach((t, k) => t.classList.toggle('on', k === i));
+    };
+    if (thumbs) images.forEach((im, i) => thumbs.append(h('button.gal-thumb', { onclick: () => show(i), 'aria-label': 'Show image ' + (i + 1) + ': ' + (im.alt || '') }, h('img', { src: im.src, alt: '' }))));
+    add(fig, frame, cap, thumbs);
+    show(0);
+    return fig;
   }
 
   /* ---------- media renderers ---------- */
   const MEDIA = {
-    image(m) { return h('div', photo(m.src, m.caption), m.extra ? photo(m.extra.src, m.extra.caption) : null); },
-    newspaper(m) { return h('div', h('span.archival-tag', 'ARCHIVAL NEWSPAPER · ZOOM & DRAG'), zoomViewer(m.src, m.caption), h('p.media-cap', m.caption)); },
-    audio(m) {
-      const a = new Audio();
-      a.preload = 'none'; a.src = m.src; a.volume = NF.Audio.vol.voice;
-      const disc = h('div.disc');
+    newspaper(m) { return h('div.media-block', zoomViewer(m.src, m.caption), h('p.media-cap', m.caption)); },
+    audio(m, a) {
+      const el = new window.Audio();
+      el.preload = 'none'; el.src = m.src; el.volume = NF.Audio.vol.voice;
       const play = h('button.deco-btn.small', '▶ Play recording');
-      const fill = h('span'), bar = h('div.audio-bar', fill), time = h('span.narr-time', '0:00');
-      const err = h('div.audio-err', { hidden: true }, 'The recording could not be streamed (you may be offline). ', h('a', { href: 'https://www.loc.gov/item/2016655168/', target: '_blank', rel: 'noopener', style: { color: '#ffd27a' } }, 'Listen at the Library of Congress ↗'));
+      const fill = h('span'), bar = h('div.audio-bar', { role: 'slider', 'aria-label': 'Recording position', tabindex: 0 }, fill), time = h('span.narr-time', '0:00 / 4:22');
+      const err = h('div.audio-err', { hidden: true }, 'The recording could not be streamed (you may be offline). The transcript below is the complete text. ', h('a', { href: 'https://www.loc.gov/item/2016655168/', target: '_blank', rel: 'noopener' }, 'Listen at the Library of Congress ↗'));
+      const T = a.transcript;
+      const rows = T ? T.lines.map(([t, line]) => h('p.tr-line', { 'data-t': t }, h('span.tr-time', Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0')), ' ', line)) : [];
       play.onclick = () => {
-        if (a.paused) { if (NF.Audio) NF.Audio.setDuck(true); play.textContent = 'Loading…'; a.play().then(() => { play.textContent = '❚❚ Pause'; disc.classList.add('spin'); }).catch(() => { err.hidden = false; play.textContent = '▶ Play recording'; }); }
-        else { a.pause(); }
+        if (el.paused) { NF.Audio.setDuck(true); play.textContent = 'Loading…'; el.play().then(() => { play.textContent = '❚❚ Pause'; }).catch(() => { err.hidden = false; play.textContent = '▶ Play recording'; NF.Audio.setDuck(false); }); }
+        else el.pause();
       };
-      a.addEventListener('pause', () => { play.textContent = '▶ Play recording'; disc.classList.remove('spin'); if (NF.Audio) NF.Audio.setDuck(false); });
-      a.addEventListener('error', () => { err.hidden = false; play.textContent = '▶ Play recording'; disc.classList.remove('spin'); });
-      a.addEventListener('timeupdate', () => { if (a.duration) fill.style.width = (a.currentTime / a.duration) * 100 + '%'; const s = Math.floor(a.currentTime); time.textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); });
-      bar.onclick = (e) => { const r = bar.getBoundingClientRect(); if (a.duration) a.currentTime = ((e.clientX - r.left) / r.width) * a.duration; };
-      const box = h('div',
-        h('div.audio-box', h('span.archival-tag', 'ARCHIVAL SOUND RECORDING · 78 RPM'), h('div.audio-row', disc, h('div', { style: { flex: 1 } }, h('div', { style: { fontFamily: 'var(--f-pixel)', color: '#f3d58a' } }, '“Readjustment” — Warren G. Harding'), h('div.audio-row', { style: { marginTop: '8px' } }, play, bar, time))), h('div.audio-note', m.note), err),
-        m.img ? h('div', { style: { marginTop: '12px' } }, photo(m.img, m.imgCaption)) : null);
-      box._cleanup = () => { a.pause(); a.src = ''; };
+      el.addEventListener('pause', () => { play.textContent = '▶ Play recording'; NF.Audio.setDuck(false); });
+      el.addEventListener('ended', () => NF.Audio.setDuck(false));
+      el.addEventListener('error', () => { err.hidden = false; play.textContent = '▶ Play recording'; NF.Audio.setDuck(false); });
+      el.addEventListener('timeupdate', () => {
+        if (el.duration) fill.style.width = (el.currentTime / el.duration) * 100 + '%';
+        const sec = Math.floor(el.currentTime); time.textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0') + ' / 4:22';
+        let curRow = null; rows.forEach((r) => { if (+r.dataset.t <= el.currentTime) curRow = r; r.classList.remove('now'); });
+        if (curRow) curRow.classList.add('now');
+      });
+      bar.onclick = (e) => { const r = bar.getBoundingClientRect(); if (el.duration) el.currentTime = ((e.clientX - r.left) / r.width) * el.duration; };
+      rows.forEach((r) => { r.onclick = () => { if (el.duration) { el.currentTime = +r.dataset.t; if (el.paused) play.click(); } }; r.title = 'Play from here'; });
+      const box = h('div.media-block',
+        h('div.player', h('div.player-title', '“Readjustment,” Warren G. Harding, 1920'), h('div.audio-row', play, bar, time),
+          h('p.player-note', 'Streams the original 78-rpm disc from the Library of Congress (4 minutes 22 seconds). Needs an internet connection.'), err),
+        T ? h('section.transcript', { 'aria-label': 'Transcript' },
+          h('h4', 'Transcript'),
+          h('dl.tr-meta', h('dt', 'Speaker'), h('dd', T.speaker), h('dt', 'Context'), h('dd', T.context)),
+          h('p.tr-note', T.note),
+          h('div.tr-body', rows)) : null);
+      box._cleanup = () => { el.pause(); el.removeAttribute('src'); NF.Audio.setDuck(false); };
       return box;
     },
     document(m) {
-      return h('div', m.img ? h('div', { style: { marginBottom: '12px' } }, photo(m.img, m.imgCaption)) : null,
-        h('div.paper-doc', h('span.archival-tag', 'VERIFIED TEXT EXCERPT'), h('div.pd-head', m.heading), m.lines.map(([k, v]) => h('div.pd-line', h('b', k), h('span', v))), h('div.pd-foot', m.foot)));
+      return h('div.paper-doc', h('div.pd-head', m.heading), m.lines.map(([k, v]) => h('div.pd-line', h('b', k), h('span', v))), h('div.pd-foot', m.foot));
     },
-    timeline(m) { return h('div', h('span.archival-tag.illus', 'MUSEUM TIMELINE (SECONDARY)'), h('ul.timeline', { style: { marginTop: '8px' } }, m.items.map(([d, t]) => h('li', h('span.tl-d', d), t)))); },
-    none() { return h('div.paper-doc', h('span.archival-tag.illus', 'MODERN PIXEL-ART ILLUSTRATION'), h('p', 'This statue in the town square is a modern pixel-art illustration created for the museum, inspired by the many WWI “doughboy” memorials built in American towns during the 1920s. It is not an archival object.')); },
-    board(m, art, id) {
+    timeline(m) { return h('ul.timeline', m.items.map(([d, t]) => h('li', h('span.tl-d', d), t))); },
+    board(m) {
       const seen = new Set();
-      const detail = h('div.note-detail', h('em', 'Click a pinned note to read it. Check each label: primary or secondary?'));
+      const detail = h('div.note-detail', { 'aria-live': 'polite' }, h('em', 'Click a pinned note to read it. Check each label: primary or secondary?'));
       const board = h('div.board');
-      const notes = m.items.map((it, i) => {
-        const b = h('button.note', { onclick: () => {
+      const items = (m.items || []).filter(Boolean);
+      const notes = items.map((it, i) => {
+        const b = h('button.note', { 'aria-label': (it.t || 'Evidence') + ', ' + (it.type || 'source') }, h('span.nt.src-type.' + (it.type || 'secondary'), it.type === 'primary' ? 'PRIMARY' : 'SECONDARY'), it.t || 'Evidence');
+        b.onclick = () => {
           notes.forEach((n) => n.classList.remove('active')); b.classList.add('active', 'seen'); seen.add(i);
-          if (NF.Audio) NF.Audio.sfx('page');
-          const src = NF.src(it.src);
+          NF.Audio.sfx('page');
+          const src = it.src ? NF.src(it.src) : null;
           detail.innerHTML = '';
-          detail.append(it.img ? h('img', { src: it.img, alt: it.t, onclick: () => lightbox(it.img, it.t), style: { cursor: 'zoom-in' } }) : null,
-            h('span.src-type.' + it.type, it.type.toUpperCase() + ' SOURCE'), h('h4', { style: { fontFamily: 'var(--f-pixel)', margin: '6px 0' } }, it.t), h('p', it.d),
-            src ? h('div', { style: { fontSize: '13px', color: '#6a5a48' } }, 'Source: ', h('span', { html: src.mla }), ' ', h('a', { href: src.url, target: '_blank', rel: 'noopener' }, 'link ↗')) : null);
-          if (seen.size === m.items.length) NF.UI.toast('Every piece of evidence reviewed', 'EVIDENCE BOARD', '✓');
-        } }, h('span.nt.src-type.' + it.type, it.type === 'primary' ? 'PRIMARY' : 'SECONDARY'), it.t);
+          if (it.img) {
+            const im = h('img', { src: it.img, alt: it.t || '', title: 'Click to enlarge' });
+            im.onclick = () => lightbox(it.img, it.t);
+            im.onerror = () => im.remove();
+            detail.append(im);
+          }
+          add(detail,
+            h('span.src-type.' + (it.type || 'secondary'), (it.type === 'primary' ? 'PRIMARY' : 'SECONDARY') + ' SOURCE'),
+            h('h4', it.t || 'Evidence'),
+            h('p', it.d || 'Details for this item are not available.'),
+            src ? h('div.note-src', 'Source: ', h('span', { html: src.mla }), ' ', h('a', { href: src.url, target: '_blank', rel: 'noopener' }, 'link ↗')) : null);
+          if (seen.size === items.length && !this._boardDone) { this._boardDone = true; NF.UI.toast('Every piece of evidence reviewed', 'EVIDENCE BOARD', '✓'); }
+        };
         return b;
       });
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', '0 0 300 160'); svg.setAttribute('preserveAspectRatio', 'none');
-      [[50, 30, 150, 30], [150, 30, 250, 30], [50, 30, 150, 110], [250, 30, 250, 110], [150, 110, 50, 110]].forEach(([x1, y1, x2, y2]) => { const l = document.createElementNS(svg.namespaceURI, 'line'); l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2); l.setAttribute('stroke', '#c8302e'); l.setAttribute('stroke-width', '1.2'); svg.append(l); });
-      board.append(svg, ...notes);
-      return h('div', board, detail);
+      board.append(...notes);
+      return h('div.media-block', board, detail);
     },
-    map(m) {
-      // simplified, clearly labelled illustration of the contiguous U.S.
+    map() {
       const svg = `<svg viewBox="0 0 400 230" class="flow-svg" role="img" aria-label="Simplified map of the United States marking Teapot Dome, Wyoming and Elk Hills, California">
         <rect width="400" height="230" fill="#e8dcbc"/>
         <path d="M22 40 L120 30 L200 34 L282 38 L330 30 L350 48 L372 52 L380 74 L360 96 L352 128 L330 150 L318 178 L296 196 L286 222 L270 196 L236 180 L206 196 L176 212 L150 190 L118 182 L84 178 L58 162 L36 134 L24 100 Z" fill="#c8b480" stroke="#7a6a4a" stroke-width="2"/>
@@ -135,21 +178,20 @@
         <circle cx="54" cy="128" r="5" fill="#c8302e" stroke="#fff" stroke-width="1.5"/>
         <text x="64" y="208" font-family="Pixelify Sans, sans-serif" font-size="11" fill="#7a2630">Elk Hills (Naval Reserve No. 1)</text>
         <line x1="54" y1="133" x2="80" y2="198" stroke="#7a2630" stroke-dasharray="3 2"/>
-        <text x="386" y="222" text-anchor="end" font-family="Silkscreen, monospace" font-size="8" fill="#6a5a48">SIMPLIFIED ILLUSTRATION · NOT TO SCALE</text>
+        <text x="386" y="222" text-anchor="end" font-family="Silkscreen, monospace" font-size="8" fill="#6a5a48">SIMPLIFIED ILLUSTRATION, NOT TO SCALE</text>
       </svg>`;
-      return h('div', h('span.archival-tag.illus', 'MODERN ILLUSTRATED MAP'), h('div', { html: svg }), h('div', { style: { marginTop: '12px' } }, photo(m.img, m.imgCaption, 'MODERN PHOTOGRAPH (2016)')));
+      return h('div.media-block', h('div', { html: svg }), h('p.media-cap', 'Simplified map drawn for this museum. Not to scale.'));
     },
     compare(m) {
-      return h('div', h('div.compare',
-        h('div', h('h4', m.left.title), photo(m.left.src, m.left.caption)),
-        h('div', h('h4', m.right.title), photo(m.right.src, m.right.caption))),
+      const pic = (side) => h('figure.gal', h('div.gal-frame', (() => { const i = h('img', { src: side.src, alt: side.caption, title: 'Click to enlarge' }); i.onclick = () => lightbox(side.src, side.caption); return i; })()), h('figcaption', side.caption));
+      return h('div.media-block', h('div.compare', h('div', h('h4', m.left.title), pic(m.left)), h('div', h('h4', m.right.title), pic(m.right))),
         h('div.compare', { style: { marginTop: '12px' } },
-          h('div.prio-card', h('b', 'A business view'), h('p', { style: { margin: '6px 0 0', fontSize: '15px' } }, 'Stable government, lower taxes and protective tariffs let industry invest and grow — and growth creates jobs.')),
-          h('div.prio-card', h('b', 'A labor view'), h('p', { style: { margin: '6px 0 0', fontSize: '15px' } }, 'When workers organized for better wages, the federal government used courts and injunctions against them.'))),
-        h('p.media-cap', 'The two “views” summarize contrasting perspectives described by the sources below; they are not direct quotations.'));
+          h('div.view-card', h('b', 'A business view'), h('p', 'Stable government, lower taxes and protective tariffs let industry invest and grow, and growth creates jobs.')),
+          h('div.view-card', h('b', 'A labor view'), h('p', 'When workers organized for better wages, the federal government used courts and injunctions against them.'))),
+        h('p.media-cap', 'These two views summarize perspectives described by the sources below. They are not direct quotations.'));
     },
     diagram() {
-      const svg = `<svg viewBox="0 0 440 260" class="flow-svg" role="img" aria-label="Animated flowchart: U.S. banks lend to Germany, Germany pays reparations to Britain and France, who repay war debts to the U.S. government">
+      const svg = `<svg viewBox="0 0 440 260" class="flow-svg dark" role="img" aria-label="Flowchart: U.S. banks lend to Germany; Germany pays reparations to Britain and France; they repay war debts to the U.S. government">
         <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#f3d58a"/></marker>
         <style>.fl{fill:none;stroke-width:4;stroke-dasharray:10 8;animation:dash 1.4s linear infinite}@keyframes dash{to{stroke-dashoffset:-36}}.nd{fill:#f4ead2;stroke:#9c7a36;stroke-width:3}.nt{font-family:Pixelify Sans,sans-serif;font-size:14px;font-weight:700;fill:#2a1d18;text-anchor:middle}.lb{font-family:Pixelify Sans,sans-serif;font-size:12px;fill:#f3d58a;text-anchor:middle}.sm{font-family:EB Garamond,serif;font-size:11px;fill:#e9dcbc;text-anchor:middle;font-style:italic}</style></defs>
         <path class="fl" stroke="#f2c14a" d="M120 52 L320 52" marker-end="url(#ah)"/>
@@ -159,81 +201,93 @@
         <rect class="nd" x="318" y="28" width="108" height="48"/><text class="nt" x="372" y="57">GERMANY</text>
         <rect class="nd" x="318" y="184" width="108" height="48"/><text class="nt" x="372" y="206">BRITAIN</text><text class="nt" x="372" y="222">&amp; FRANCE</text>
         <rect class="nd" x="14" y="184" width="108" height="48"/><text class="nt" x="68" y="206">U.S.</text><text class="nt" x="68" y="222">GOVERNMENT</text>
-        <text class="lb" x="220" y="42">① Private loans</text><text class="sm" x="220" y="70">$200 million Dawes loan (1924) + more</text>
-        <text class="lb" x="300" y="128" text-anchor="end">② Reparations</text><text class="sm" x="300" y="144" text-anchor="end">bill set at 132 billion gold marks (1921)</text>
-        <text class="lb" x="220" y="200">③ War-debt repayments</text><text class="sm" x="220" y="228">on more than $10 billion in wartime loans</text>
-        <text class="sm" x="70" y="134">The cycle worked only</text><text class="sm" x="70" y="148">while step ① continued</text>
+        <text class="lb" x="220" y="42">1. Private loans</text><text class="sm" x="220" y="70">$200 million Dawes loan (1924) and more</text>
+        <text class="lb" x="300" y="128" text-anchor="end">2. Reparations</text><text class="sm" x="300" y="144" text-anchor="end">bill set at 132 billion gold marks (1921)</text>
+        <text class="lb" x="220" y="200">3. War-debt repayments</text><text class="sm" x="220" y="228">on more than $10 billion in wartime loans</text>
+        <text class="sm" x="70" y="134">The cycle worked only</text><text class="sm" x="70" y="148">while step 1 continued</text>
       </svg>`;
-      return h('div', h('span.archival-tag.illus', 'MUSEUM DIAGRAM · SIMPLIFIED MODEL'), h('div', { html: svg }),
-        h('p.media-cap', 'Simplified model based on the U.S. Office of the Historian. Real flows also included trade, tariffs and gold — and the cycle broke when American lending dried up in 1928.'));
+      return h('div.media-block', h('div', { html: svg }),
+        h('p.media-cap', 'Simplified model based on the U.S. Office of the Historian. Real flows also included trade, tariffs and gold, and the cycle broke when American lending dried up in 1928.'));
     },
-    priorities(m) {
+    priorities() {
       const P = [
         { k: 'Tax reduction', sup: 'Lower rates leave money for investment and reward work.', crit: 'Benefits went mostly to the wealthiest taxpayers.', did: 'Revenue Acts of 1924 and 1926 cut income, estate and gift taxes.', ev: 'Miller Center; Cato Journal' },
-        { k: 'Federal expenditure', sup: 'A thrifty government “saves people” from the cost of waste (Coolidge, 1925).', crit: 'Spending restraint left little room for relief programs.', did: 'Coolidge pursued economy and ran budget surpluses.', ev: 'Coolidge inaugural address; Miller Center' },
+        { k: 'Federal spending', sup: 'A thrifty government “saves people” from the cost of waste (Coolidge, 1925).', crit: 'Spending restraint left little room for relief programs.', did: 'Coolidge pursued economy and ran budget surpluses.', ev: 'Coolidge inaugural address; Miller Center' },
         { k: 'Business growth', sup: 'Confidence and light regulation fueled a consumer boom.', crit: 'Light regulation let speculation and margin buying grow.', did: 'A hands-off approach to business regulation.', ev: 'Miller Center' },
-        { k: 'Farm distress', sup: 'Price supports would be costly and encourage overproduction.', crit: 'Farmers suffered low prices all decade while cities boomed.', did: 'Vetoed the McNary-Haugen farm bills (1927, 1928).', ev: 'Miller Center; LOC photograph, Jan. 12, 1924' },
-        { k: 'Public expectations', sup: 'Most help should come from states, communities and private effort.', crit: 'Many Americans expected Washington to respond to hardship.', did: 'Left most issues to the states; restraint over bold action.', ev: 'Miller Center' },
+        { k: 'Farm distress', sup: 'Price supports would be costly and encourage overproduction.', crit: 'Farmers suffered low prices all decade while cities boomed.', did: 'Vetoed the McNary-Haugen farm bills (1927, 1928).', ev: 'Miller Center; Library of Congress photograph, Jan. 12, 1924' },
+        { k: 'What the public expected', sup: 'Most help should come from states, communities and private effort.', crit: 'Many Americans expected Washington to respond to hardship.', did: 'Left most issues to the states; restraint over bold action.', ev: 'Miller Center' },
       ];
-      const card = h('div.prio-card');
+      const card = h('div.view-card');
       const chips = P.map((p, i) => h('button.chip' + (i === 0 ? '.on' : ''), { onclick: (e) => { chips.forEach((c) => c.classList.remove('on')); e.currentTarget.classList.add('on'); show(p); } }, p.k));
-      const show = (p) => { card.innerHTML = ''; card.append(h('dl', { style: { margin: 0 } }, h('dt', 'WHAT SUPPORTERS ARGUED'), h('dd', p.sup), h('dt', 'WHAT CRITICS ARGUED'), h('dd', p.crit), h('dt', 'WHAT THE ADMINISTRATION DID'), h('dd', p.did), h('dt', 'EVIDENCE'), h('dd', p.ev))); };
+      const show = (p) => { card.innerHTML = ''; card.append(h('dl', h('dt', 'Supporters argued'), h('dd', p.sup), h('dt', 'Critics argued'), h('dd', p.crit), h('dt', 'What the administration did'), h('dd', p.did), h('dt', 'Evidence'), h('dd', p.ev))); };
       show(P[0]);
-      return h('div', photo(m.img, m.imgCaption), h('div', { style: { marginTop: '12px' } }, h('span.sim-label', 'COMPARISON DISPLAY · QUALITATIVE — NO INVENTED STATISTICS'), h('div.chip-row', chips), card));
+      return h('div.media-block', h('h4', 'Comparing priorities'), h('p.media-cap', 'A summary of arguments, with no invented statistics. Choose a priority:'), h('div.chip-row', chips), card);
     },
     case(m) {
-      const cv = h('canvas', { width: 18, height: 16, style: { width: '108px', height: '96px', imageRendering: 'pixelated', background: 'radial-gradient(circle,#e8d8b0,#c8b48a)', border: '3px solid #9c7a36', float: 'right', marginLeft: '12px' } });
-      const g = cv.getContext('2d'); g.imageSmoothingEnabled = false;
-      g.drawImage(NF.Art.portrait({ skin: '#ecc6a4', hair: '#2a1e18', hat: 'none', style: 'suit', top: '#3a3a44', bottom: '#3a3a44', tie: '#7a2630', glasses: true }), 0, 0);
-      return h('div',
-        h('div.paper-doc', cv, h('span.archival-tag.illus', 'PIXEL-ART ILLUSTRATION OF BENJAMIN GITLOW'), h('p', { style: { fontSize: '14px', marginTop: '6px' } }, m.note),
-          h('ul.timeline', { style: { clear: 'both', marginTop: '10px' } }, m.timeline.map(([d, t]) => h('li', h('span.tl-d', d), t)))),
+      return h('div.media-block',
+        h('h4', 'The case at a glance'),
+        h('ul.timeline', m.timeline.map(([d, t]) => h('li', h('span.tl-d', d), t))),
         h('div.compare', { style: { marginTop: '12px' } },
-          h('div.prio-card', h('b', 'Outcome for Gitlow'), h('p', { style: { margin: '6px 0 0', fontSize: '15px' } }, 'LOST. The Court upheld his conviction, 7–2. New York could punish speech it judged dangerous to public order.')),
-          h('div.prio-card', h('b', 'Constitutional significance'), h('p', { style: { margin: '6px 0 0', fontSize: '15px' } }, 'EXPANDED. The First Amendment’s free-speech protection now applied to state governments through the Fourteenth Amendment.'))),
-        h('div.paper-doc', { style: { marginTop: '12px' } }, h('div.pd-line', h('b', '1st Amendment'), h('span', '“Congress shall make no law… abridging the freedom of speech, or of the press…”')), h('div.pd-line', h('b', '14th Amendment'), h('span', '“…nor shall any State deprive any person of life, liberty, or property, without due process of law…”'))));
+          h('div.view-card', h('b', 'Outcome for Gitlow'), h('p', 'He lost. The Court upheld his conviction, 7 to 2. New York could punish speech it judged dangerous to public order.')),
+          h('div.view-card', h('b', 'Constitutional significance'), h('p', 'Free speech now reached state governments through the Fourteenth Amendment, a principle later courts built on.'))),
+        h('div.paper-doc', { style: { marginTop: '12px' } },
+          h('div.pd-line', h('b', '1st Amendment'), h('span', '“Congress shall make no law… abridging the freedom of speech, or of the press…”')),
+          h('div.pd-line', h('b', '14th Amendment'), h('span', '“…nor shall any State deprive any person of life, liberty, or property, without due process of law…”'))));
     },
   };
 
-  /* ---------- the archive file window ---------- */
+  /* ---------- the archive window ---------- */
   const Artifacts = (NF.Artifacts = {
+    media: MEDIA,
     open(id) {
       const C = NF.CONTENT, a = C.ARTIFACTS[id];
-      if (!a) return;
+      if (!a) { NF.UI.toast('This exhibit is not available.', 'ARCHIVE', '!'); return; }
       const S = NF.Save.data;
       const first = !S.examined[id];
       S.examined[id] = true; NF.Save.save();
+      this._boardDone = false;
       const room = C.ROOMS[a.room];
-      const media = (MEDIA[a.media.kind] || MEDIA.none)(a.media, a, id);
+      const kind = a.media && a.media.kind;
+      let special = null;
+      try { special = kind && MEDIA[kind] ? MEDIA[kind].call(this, a.media, a) : null; } catch (e) { console.error(e); special = h('div.img-missing', 'This display could not be shown. The text and sources are still available.'); }
+      const gal = gallery(a.images);
+      const left = h('div.art-media');
+      if (kind === 'document') add(left, gal, special); else add(left, special, gal);
+      if (!left.children.length) left.append(h('div.img-missing', 'No image for this item.'));
+
+      const tt = TYPE_TEXT[a.type] || [a.type, ''];
+      const section = (title, body) => (body ? h('section.af-sec', h('h4', title), Array.isArray(body) ? body.map((p) => h('p', p)) : h('p', body)) : null);
       const info = h('div.art-info',
-        h('span.stamp.' + a.type, TYPE_LABEL[a.type] || a.type.toUpperCase()),
-        h('table.meta', h('tbody',
-          h('tr', h('th', 'Date'), h('td', a.date)),
-          h('tr', h('th', 'Creator'), h('td', a.creator)),
-          h('tr', h('th', 'Source type'), h('td', a.type === 'primary' ? 'Primary — created at the time' : a.type === 'secondary' ? 'Secondary — an interpretation made later' : a.type === 'illustration' ? 'Modern illustration — created for this museum' : 'Composite')))),
-        a.excerpt ? h('blockquote.quote', a.excerpt.text, h('cite', '— ' + a.excerpt.by)) : null,
-        a.excerpt && a.excerpt.second ? h('blockquote.quote', a.excerpt.second.text, h('cite', '— ' + a.excerpt.second.by)) : null,
-        h('h3', 'Historical background'), a.background.map((p) => h('p', p)),
-        h('div.why', h('strong', 'Why it matters to “normalcy”'), a.why),
-        a.eq && a.eq.length ? h('div.eq-badges', a.eq.map((k) => h('span.eq-badge', { title: C.EQS[k], tabindex: 0 }, 'EQ ' + k + ' — ' + C.EQS[k].split(' ').slice(0, 7).join(' ') + '…'))) : null,
+        h('p.af-kind', a.kind || '', a.date ? ' · ' + a.date : ''),
+        h('p.af-type.' + a.type, h('b', tt[0]), tt[1] ? ', ' + tt[1] : ''),
+        a.creator ? h('p.af-creator', 'Made by: ' + a.creator) : null,
+        a.summary ? h('p.af-lead', a.summary) : null,
+        a.excerpt ? h('blockquote.quote', a.excerpt.text, h('cite', a.excerpt.by)) : null,
+        a.excerpt && a.excerpt.second ? h('blockquote.quote', a.excerpt.second.text, h('cite', a.excerpt.second.by)) : null,
+        section('Background', a.background),
+        section('What this evidence tells us', a.tells),
+        section('Limits of this source', a.limits),
+        section('Why it matters for normalcy', a.why),
+        a.more && a.more.length ? h('details.more', h('summary', 'Read more'), a.more.map((p) => h('p', p))) : null,
         this.questionBox(a),
-        h('h3', 'Sources & citations'),
-        a.sources.length ? h('ol.cites', a.sources.map((sid) => { const s = NF.src(sid); return s ? h('li', h('span.src-type.' + s.type, s.type.toUpperCase()), h('span', { html: s.mla + ' ' }), h('a', { href: s.url, target: '_blank', rel: 'noopener' }, 'View source ↗')) : null; })) : h('p', { style: { fontSize: '14px' } }, 'Modern illustration — no archival source. See the Library for the museum’s full bibliography.'));
-      const body = h('div.art-grid', h('div.art-media', media), info);
-      NF.UI.modal({ kicker: room ? (room.num <= 6 ? `EXHIBIT ${room.num} · ARCHIVE FILE` : 'ARCHIVE FILE') : 'TOWN SQUARE · ARCHIVE FILE', title: a.title, body, cls: 'paper', closeText: 'Return to the room  (Esc)', onClose: () => { if (media._cleanup) media._cleanup(); } });
+        h('section.af-sec.af-sources', h('h4', 'Sources'),
+          a.sources.length ? h('ol.cites', a.sources.map((sid) => { const s = NF.src(sid); return s ? h('li', h('span', { html: s.mla + ' ' }), h('a', { href: s.url, target: '_blank', rel: 'noopener' }, 'View source ↗')) : null; })) : h('p', 'See the Library for the full bibliography.')));
+      const body = h('div.art-grid', left, info);
+      NF.UI.modal({ kicker: room ? (room.num <= 6 ? `Exhibit ${room.num}: ${room.title}` : room.title) : 'Town Square', title: a.title, body, cls: 'paper', closeText: 'Close and keep exploring', onClose: () => { if (special && special._cleanup) special._cleanup(); } });
       if (first) {
         const total = Object.keys(C.ARTIFACTS).length, n = Object.keys(C.ARTIFACTS).filter((k) => S.examined[k]).length;
-        NF.UI.toast(`Artifact catalogued (${n}/${total})`, 'ARCHIVE', '✦');
-        if (NF.Audio) NF.Audio.sfx('discover');
+        NF.UI.toast(`Artifact examined (${n} of ${total})`, 'ARCHIVE', '✦');
+        NF.Audio.sfx('discover');
         NF.UI.updateHud();
       }
     },
     questionBox(a) {
-      const box = h('div.question', h('strong', '✎ Think like a historian'), h('div', a.question));
+      if (!a.question) return null;
+      const box = h('section.af-sec.question', h('h4', 'Think about it'), h('p', a.question));
       if (a.thinking) {
-        const th = h('div.thinking', { hidden: true }, h('b', 'One possible answer: '), a.thinking);
-        const btn = h('button.link-btn', { style: { color: '#7a2630', paddingLeft: 0 }, onclick: () => { th.hidden = !th.hidden; btn.textContent = th.hidden ? 'Show a historian’s thinking' : 'Hide'; } }, 'Show a historian’s thinking');
-        box.append(h('div', btn), th);
+        const th = h('p.thinking', { hidden: true }, h('b', 'One possible answer: '), a.thinking);
+        const btn = h('button.link-btn.dark', { onclick: () => { th.hidden = !th.hidden; btn.textContent = th.hidden ? 'Show one possible answer' : 'Hide the answer'; } }, 'Show one possible answer');
+        box.append(btn, th);
       }
       return box;
     },

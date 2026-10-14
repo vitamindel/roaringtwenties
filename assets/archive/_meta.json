@@ -318,5 +318,163 @@
   ],
   "src": "https://tile.loc.gov/storage-services/service/pnp/det/4a20000/4a25000/4a25900/4a25915v.jpg",
   "px": 1024
+ },
+ "palmer": {
+  "id": "2005691410",
+  "title": "[U.S. Attorney General Alexander Mitchell Palmer, half-length portrait, facing front]",
+  "date": "1919-01-01",
+  "created": [
+   "[Washington, D.C.] : Harris & Ewing, [1919]"
+  ],
+  "url": "https://www.loc.gov/item/2005691410/",
+  "rights": "N",
+  "repro": "LC-DIG-ds-07209 (digital file from original item)\nLC-USZ62-36869 (b&w film copy neg.)",
+  "notes": [
+   "J236379 U.S. Copyright Office",
+   "Title devised by Library staff.",
+   "Publication date based on copyright statement: \"Aug. 27, 1919.\""
+  ],
+  "src": "https://tile.loc.gov/storage-services/service/pnp/ds/07200/07209v.jpg",
+  "px": 1024
+ },
+ "cabinet": {
+  "id": "2016829902",
+  "title": "Harding Cabinet outside",
+  "date": "1921-01-01",
+  "created": [
+   "[1921]"
+  ],
+  "url": "https://www.loc.gov/item/2016829902/",
+  "rights": "N",
+  "repro": "LC-DIG-npcc-03671 (digital file from original)",
+  "notes": [
+   "Title from unverified data provided by the National Photo Company on the negatives or negative sleeves.",
+   "Date from negatives in same range.",
+   "Gift; Herbert A. French; 1947."
+  ],
+  "src": "https://tile.loc.gov/storage-services/service/pnp/npcc/03600/03671v.jpg",
+  "px": 1024
+ },
+ "senate_oil": {
+  "id": "90713816",
+  "title": "The Senate discusses the oil scandal--(Senators Walsh and Lenroot, who know most about it, in the foreground) / Gluyas Williams.",
+  "date": "1924-01-01",
+  "created": [
+   "[published 1924]"
+  ],
+  "url": "https://www.loc.gov/item/90713816/",
+  "rights": "N",
+  "repro": "LC-USZ62-100717 (b&w film copy neg.)",
+  "notes": [
+   "Illus. in: Life, v. 83, no. 2157 (1924 March 6), p. 13.",
+   "Reference copy in LOT 7011-E."
+  ],
+  "src": "https://tile.loc.gov/storage-services/service/pnp/cph/3c00000/3c00000/3c00700/3c00717v.jpg",
+  "px": 1024
+ },
+ "coolidge_radio": {
+  "id": "2016849590",
+  "title": "Hoover & Coolidge - Coolidge addressing radio men at White House, [Washington, D.C.], 10/8/24",
+  "date": "1924-01-01",
+  "created": [
+   "[19]24 October 8."
+  ],
+  "url": "https://www.loc.gov/item/2016849590/",
+  "rights": "N",
+  "repro": "LC-DIG-npcc-26256 (digital file from original)",
+  "notes": [
+   "Title from unverified data provided by the National Photo Company on the negative or negative sleeve.",
+   "Gift; Herbert A. French; 1947.",
+   "General information about the National Photo Company collection is available at http://hdl.loc.gov/loc.pnp/pp.npco"
+  ],
+  "src": "https://tile.loc.gov/storage-services/service/pnp/npcc/26200/26256v.jpg",
+  "px": 1024
+ },
+ "plymouth_oath": {
+  "id": "2011647457",
+  "title": "First correct composite photograph made of President Coolidge's first dramatic inaugural in Plymouth, Vt.",
+  "date": "1925-01-01",
+  "created": [
+   "c1925."
+  ],
+  "url": "https://www.loc.gov/item/2011647457/",
+  "rights": "N",
+  "repro": "LC-USZ62-7885 (b&w film copy neg.)",
+  "notes": [
+   "Title from item.",
+   "Souvenir of Coolidge inaugural prepared by the Boston Sunday Post especially for the Pictorial Section of March 1, 1925.",
+   "Copyright 1925 The Boston Post."
+  ],
+  "src": "https://tile.loc.gov/storage-services/service/pnp/cph/3a10000/3a10000/3a10500/3a10519r.jpg",
+  "px": 640
+ },
+ "hughes_sign": {
+  "id": "91730757",
+  "title": "Secty of State Hughes signing the treaties resulting from the Conference of Limitation of Armaments today. Other members of the American delegation around the table",
+  "date": "1922-01-01",
+  "created": [
+   "1922 Feb. 5."
+  ],
+  "url": "https://www.loc.gov/item/91730757/",
+  "rights": "N",
+  "repro": "LC-USZ6-1755 (b&w film copy neg.)\nLC-F81-17572 (b&w film neg.)",
+  "notes": [
+   "National Photo Company Collection."
+  ],
+  "src": "https://tile.loc.gov/storage-services/service/pnp/cph/3d00000/3d01000/3d01700/3d01755v.jpg",
+  "px": 1024
+ },
+ "kellogg_pact": {
+  "id": "94509170",
+  "title": "[Calvin Coolidge, Herbert Hoover, and Frank B. Kellogg, standing, with representatives of the governments who have ratified the Treaty for Renunciation of War (Kellogg-Briand Pact), in the East Room of the White House]",
+  "date": "1929",
+  "created": [
+   "[1929 July 24]"
+  ],
+  "url": "https://www.loc.gov/item/94509170/",
+  "rights": "N",
+  "repro": "LC-USZ62-111722 (b&w film copy neg.)",
+  "notes": [
+   "National Photo Company Collection.",
+   "Item in album: v. 3, p. 18, no. 42964."
+  ],
+  "src": "https://tile.loc.gov/storage-services/service/pnp/cph/3c10000/3c11000/3c11700/3c11722v.jpg",
+  "px": 1024
+ },
+ "tulsa": {
+  "id": "2017679759",
+  "title": "After the race riots June 1st, 1921, Tulsa, Okla.",
+  "date": "1921",
+  "created": [
+   "June 1921."
+  ],
+  "url": "https://www.loc.gov/item/2017679759/",
+  "rights": "N",
+  "repro": "LC-DIG-anrc-14737 (digital file from original)",
+  "notes": [
+   "Title, date and notes transcribed from original Red Cross caption card.",
+   "Photographer name or source of original from caption card or negative sleeve: Dis. Rel.",
+   "Date received: 26 January 1922."
+  ],
+  "src": "https://tile.loc.gov/storage-services/service/pnp/anrc/14700/14737v.jpg",
+  "px": 1024
+ },
+ "cabinet_1921": {
+  "id": "2002713179",
+  "title": "First pictures of the Harding cabinet",
+  "date": "1921-01-01",
+  "created": [
+   "[1921]"
+  ],
+  "url": "https://www.loc.gov/item/2002713179/",
+  "rights": "N",
+  "repro": "LC-USZ62-132060 (b&w film copy neg.)",
+  "notes": [
+   "Title from item.",
+   "In album: Warren G. Harding, Herbert E. French, National Photo Company, v. 1, p. 18, no. 12588.",
+   "Forms part of: National Photo Company Collection (Library of Congress)."
+  ],
+  "src": "https://tile.loc.gov/storage-services/service/pnp/cph/3c30000/3c32000/3c32000/3c32060v.jpg",
+  "px": 1024
  }
 }

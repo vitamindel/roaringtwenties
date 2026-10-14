@@ -1,5 +1,5 @@
 /* =====================================================================
-   THE NORMALCY FILES — main.js
+   THE NORMALCY FILES: main.js
    Boot sequence. Order: save data → audio settings → input → world +
    engine → UI → title screen (the help-desk video is always shown first).
    ===================================================================== */

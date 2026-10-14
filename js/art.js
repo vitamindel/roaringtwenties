@@ -1,5 +1,5 @@
 /* =====================================================================
-   THE NORMALCY FILES — art.js
+   THE NORMALCY FILES: art.js
    Procedural pixel-art generator. Every sprite in the game is drawn
    here with code (no external sprite sheets), so the art can be tweaked
    without image-editing software. All art is a modern illustration.
@@ -126,6 +126,7 @@
     '&': ['.#.', '#.#', '.#.', '#.#', '.##'], '·': ['.', '.', '#', '.', '.'], ' ': ['..', '..', '..', '..', '..'],
     '$': ['.##', '##.', '.#.', '.##', '##.'], '(': ['.#', '#.', '#.', '#.', '.#'], ')': ['#.', '.#', '.#', '.#', '#.'],
     '+': ['...', '.#.', '###', '.#.', '...'], '#': ['#.#', '###', '#.#', '###', '#.#'],
+    '✓': ['....#', '...#.', '#.#..', '.#...', '.....'], '★': ['..#..', '#####', '.###.', '.#.#.', '#...#'],
   };
   function textWidth(str, s) {
     s = s || 1;
@@ -152,7 +153,7 @@
   A.text = text; A.textC = textC; A.textWidth = textWidth;
 
   /* =====================================================================
-     CHARACTERS — parametric 1920s townsfolk, 4 directions × 4 frames
+     CHARACTERS: parametric 1920s townsfolk, 4 directions × 4 frames
      ===================================================================== */
   const FW = 18, FH = 27; // frame size including outline margin
   A.FW = FW; A.FH = FH;
@@ -359,7 +360,7 @@
     return sheet;
   };
 
-  // Large portrait (for dialogue box) — crop of the head, scaled up
+  // Large portrait (for dialogue box): crop of the head, scaled up
   A.portrait = function (L) {
     const sheet = A.charSheet(L);
     const c = canvas(18, 16);
@@ -865,7 +866,7 @@
   };
 
   /* =====================================================================
-     BUILDINGS — generic facade generator with lots of options
+     BUILDINGS: generic facade generator with lots of options
      ===================================================================== */
   function wallFill(g, x, y, w, h, spec, rnd) {
     const base = spec.wallColor;
@@ -1066,7 +1067,7 @@
       const dx = Math.round(L.wx + L.ww / 2 - d.w / 2 + (d.x || 0));
       const dy = L.wy + L.wh - d.h;
       doorAt(g, dx, dy, d.w, d.h, spec);
-      L.door = { x: dx + d.w / 2, y: L.wy + L.wh };
+      L.door = { x: dx + d.w / 2, y: L.wy + L.wh, h: d.h };
       L.lights.push([dx + d.w / 2, dy - 3, 18]);
     }
     // awning
@@ -1565,6 +1566,74 @@
     R(g, 0, 0, 4, h, '#8a2a2e'); R(g, w - 4, 0, 4, h, '#8a2a2e'); R(g, 1, 0, 1, h, '#a83a3e'); R(g, w - 3, 0, 1, h, '#a83a3e');
     R(g, -1, 0, w + 2, 2, PAL.goldD);
     return c;
+  };
+
+  // Wall map for Exhibit 5: the North Atlantic, with the countries in the reparations cycle labelled
+  F.atlanticMap = function (w, h) {
+    const c = canvas(w, h);
+    const g = c.g;
+    R(g, 0, 0, w, h, PAL.goldD); R(g, 1, 1, w - 2, h - 2, '#3a2a1a'); R(g, 3, 3, w - 6, h - 6, '#9fb8b0');
+    for (let y = 3; y < h - 3; y += 2) for (let x = 3 + (y % 4); x < w - 3; x += 6) P(g, x, y, '#a9c2b9');
+    const land = '#e2d3a6', landD = '#a8925e';
+    const poly = (pts, col) => {
+      g.fillStyle = col || land; g.beginPath();
+      pts.forEach(([x, y], i) => { const px = 3 + x * (w - 6), py = 3 + y * (h - 6); if (i) g.lineTo(px, py); else g.moveTo(px, py); });
+      g.closePath(); g.fill(); g.strokeStyle = landD; g.lineWidth = 1; g.stroke();
+    };
+    poly([[0, 0], [0.22, 0], [0.25, 0.14], [0.22, 0.28], [0.26, 0.42], [0.22, 0.58], [0.18, 0.7], [0.15, 0.8], [0.16, 0.98], [0.12, 0.98], [0.1, 0.84], [0.05, 0.9], [0, 0.95]]);
+    poly([[0.6, 0.24], [0.63, 0.2], [0.64, 0.34], [0.6, 0.36]]);
+    poly([[0.65, 0.1], [0.69, 0.06], [0.7, 0.26], [0.68, 0.42], [0.64, 0.42], [0.66, 0.28]]);
+    poly([[0.67, 0.56], [0.72, 0.46], [0.78, 0.38], [0.86, 0.3], [1, 0.26], [1, 1], [0.84, 1], [0.79, 0.86], [0.72, 0.88], [0.7, 0.72]]);
+    // France / Germany border
+    g.strokeStyle = landD; g.beginPath(); g.moveTo(3 + 0.79 * (w - 6), 3 + 0.36 * (h - 6)); g.lineTo(3 + 0.81 * (w - 6), 3 + 0.6 * (h - 6)); g.lineTo(3 + 0.79 * (w - 6), 3 + 0.86 * (h - 6)); g.stroke();
+    const lab = (t, fx, fy, col) => textC(g, t, 3 + fx * (w - 6), 3 + fy * (h - 6), col || '#4a3218', 1);
+    lab('UNITED', 0.1, 0.32); lab('STATES', 0.1, 0.46);
+    lab('BRITAIN', 0.58, 0.02);
+    lab('FRANCE', 0.74, 0.66);
+    lab('GERMANY', 0.9, 0.5);
+    lab('ATLANTIC OCEAN', 0.42, 0.42, '#5a7a74');
+    // legend
+    let lx = Math.round(3 + 0.27 * (w - 6));
+    const ly = h - 10;
+    [['LOANS', '#f2c14a'], ['REPARATIONS', '#e86a5a'], ['WAR DEBTS', '#4a7ab0']].forEach(([t, col]) => {
+      R(g, lx, ly + 1, 3, 3, col); text(g, t, lx + 5, ly, '#2a3a36', 1);
+      lx += 5 + textWidth(t) + 7;
+    });
+    return { c, pts: { us: [0.2, 0.36], de: [0.9, 0.38], al: [0.71, 0.5] } };
+  };
+
+  F.ledgerPapers = function () {
+    const c = canvas(34, 14);
+    const g = c.g;
+    R(g, 2, 2, 20, 11, '#e8dcbc'); R(g, 2, 2, 20, 1, '#fff6e0');
+    for (let y = 5; y < 12; y += 2) R(g, 4, y, 16, 1, '#8a7a5a');
+    R(g, 14, 1, 18, 12, '#f2e6c8'); R(g, 16, 4, 6, 1, '#c8302e'); R(g, 22, 4, 4, 1, '#c8302e'); P(g, 26, 3, '#c8302e'); P(g, 26, 5, '#c8302e');
+    R(g, 16, 8, 10, 1, '#4a7ab0'); P(g, 15, 7, '#4a7ab0'); P(g, 15, 9, '#4a7ab0');
+    outline(c);
+    return c;
+  };
+
+  F.framedPrint = function (w, h) {
+    const c = canvas(w, h);
+    const g = c.g;
+    R(g, 0, 0, w, h, '#2a1a12'); R(g, 2, 2, w - 4, h - 4, '#f4ecd8');
+    const rnd = RNG(w * 7 + h);
+    for (let i = 0; i < 40; i++) { const x = 4 + ((rnd() * (w - 8)) | 0), y = 4 + ((rnd() * (h - 12)) | 0); disc(g, x, y, 1.6, '#3a3030'); P(g, x, y + 1, '#f4ecd8'); }
+    R(g, 4, h - 7, w - 8, 1, '#6a5a4a'); R(g, 6, h - 5, w - 12, 1, '#9a8a7a');
+    return c;
+  };
+
+  // A big wooden direction board for the town square
+  A.hubSign = function () {
+    const c = canvas(78, 40);
+    const g = c.g;
+    R(g, 8, 18, 4, 21, '#5a3a22'); R(g, 66, 18, 4, 21, '#5a3a22');
+    R(g, 1, 2, 76, 22, '#3a2416'); R(g, 3, 4, 72, 18, '#2c3d38'); R(g, 3, 4, 72, 1, '#4a6a62');
+    R(g, 1, 2, 76, 1, PAL.gold); R(g, 1, 23, 76, 1, PAL.goldD);
+    textC(g, 'MUSEUM HUB', 39, 6, PAL.gold, 1, 'rgba(0,0,0,0.5)');
+    textC(g, 'TOWN SQUARE', 39, 14, '#efe6cc', 1);
+    outline(c);
+    return { c, ax: 39, ay: 39 };
   };
 
   // Sparkle used over unexamined artifacts

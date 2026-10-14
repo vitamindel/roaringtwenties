@@ -1,5 +1,5 @@
 /* =====================================================================
-   THE NORMALCY FILES — minigames.js
+   THE NORMALCY FILES: minigames.js
    Six educational mini-games and the final "Judge Normalcy" verdict.
    Every activity explains the real history after each choice.
    ===================================================================== */
@@ -47,7 +47,7 @@
       const choices = [];
       sh.step(0);
       sh.set(h('div.g-card', h('div.g-kicker', 'HISTORICAL SIMULATION'), h('div.g-title', 'Restore Stability, 1920–1922'), h('p', G.intro),
-        h('p', { style: { fontSize: '15px', color: '#6a5a48' } }, 'You are a fictional adviser — not Harding himself. There are no “perfect” answers; every option has trade-offs.')),
+        h('p', { style: { fontSize: '15px', color: '#6a5a48' } }, 'You are a fictional adviser, not Harding himself. There are no “perfect” answers; every option has trade-offs.')),
         meterEl(), nextBtn('Begin ▸', () => round(0)));
       const round = (i) => {
         if (i >= G.rounds.length) return end();
@@ -70,9 +70,9 @@
       const end = () => {
         sh.step(5);
         sh.set(h('div.g-card', h('div.g-kicker', 'SIMULATION COMPLETE'), h('div.g-title', 'Did you restore stability?'),
-          h('p', 'Your simulated meters reflect trade-offs, not historical measurements. The real government generally chose business confidence and order over labor’s demands — while also showing “healing” by freeing Debs and leading on disarmament.'),
+          h('p', 'Your simulated meters reflect trade-offs, not historical measurements. The real government generally chose business confidence and order over labor’s demands, while also showing “healing” by freeing Debs and leading on disarmament.'),
           meterEl(),
-          h('p', { style: { marginTop: '10px' } }, h('b', 'Think about it: '), 'Which of your choices helped one group but hurt another? That tension — stability for whom? — runs through every room of this museum. (EQ A1, D1)')),
+          h('p', { style: { marginTop: '10px' } }, h('b', 'Think about it: '), 'Which of your choices helped one group but hurt another? That tension (stability for whom?) runs through every room of this museum.')),
           nextBtn('Finish ✓', () => NF.UI.closeTop()));
         sh.finish(Math.round((meters[0] + meters[1]) / 2));
       };
@@ -100,7 +100,7 @@
               if (matched === G.policies.length) fb.append(nextBtn('Next: who carried it out? ▸', phase2));
             } else {
               sfx('gentle'); b.classList.add('shake'); setTimeout(() => b.classList.remove('shake'), 400);
-              fb.innerHTML = ''; fb.append(feedback('amber', 'Not quite', h('div', `“${selL.name}” was not mainly about that. Re-read the purpose — what problem was the policy trying to solve?`)));
+              fb.innerHTML = ''; fb.append(feedback('amber', 'Not quite', h('div', `“${selL.name}” was not mainly about that. Re-read the purpose: what problem was the policy trying to solve?`)));
               score = Math.max(0, score - 2);
             }
           } }, p.purpose);
@@ -153,7 +153,7 @@
       const end = () => {
         const max = G.policies.length * 10 + G.policies.length * 10 + G.quiz.length * 10;
         sh.set(h('div.g-card.result-banner', h('div.g-kicker', 'POLICY DESK COMPLETE'), h('div.big', `${score} / ${max} points`),
-          h('p', 'Normalcy wasn’t “no government.” Budgets, tariffs, tax cuts, and court injunctions were all deliberate choices — and each helped some groups more than others. (EQ C1, A1)')), nextBtn('Finish ✓', () => NF.UI.closeTop()));
+          h('p', 'Normalcy wasn’t “no government.” Budgets, tariffs, tax cuts, and court injunctions were all deliberate choices, and each helped some groups more than others. That is the heart of the first big question: whom did government serve?')), nextBtn('Finish ✓', () => NF.UI.closeTop()));
         sh.finish(score);
       };
       phase1();
@@ -172,7 +172,7 @@
         const go = nextBtn('I’ve examined the evidence ▸', s2); go.disabled = true;
         const detail = h('div.note-detail', h('em', 'Open all six case files to continue.'));
         const list = h('div.g-opts', items.map((it, i) => h('button.g-opt', { onclick: (e) => { opened.add(i); e.currentTarget.classList.add('right'); detail.innerHTML = ''; detail.append(h('span.src-type.' + it.type, it.type.toUpperCase() + ' SOURCE'), h('h4', { style: { margin: '6px 0', fontFamily: 'var(--f-pixel)' } }, it.t), h('p', { style: { margin: 0 } }, it.d)); sfx('page'); if (opened.size === items.length) go.disabled = false; } }, `📁 Case file ${i + 1}: ${it.t}`)));
-        sh.set(h('div.g-card', h('div.g-kicker', 'STEP 1 · EXAMINE THE EVIDENCE'), h('div.g-title', 'Open the case files'), h('p', 'A good investigation starts with the evidence — not with a conclusion. Note which files are primary and which are secondary.'), list, detail), go);
+        sh.set(h('div.g-card', h('div.g-kicker', 'STEP 1 · EXAMINE THE EVIDENCE'), h('div.g-title', 'Open the case files'), h('p', 'A good investigation starts with the evidence, not with a conclusion. Note which files are primary and which are secondary.'), list, detail), go);
       };
       // 2. timeline
       const s2 = () => {
@@ -196,7 +196,7 @@
           checked = true; tries++; draw();
           const right = order.filter((it, i) => G.timeline[i].id === it.id).length;
           fb.innerHTML = '';
-          if (right === order.length) { pts += Math.max(4, 12 - tries * 2); sfx('correct'); fb.append(feedback('', 'Timeline correct!', h('div', 'Notice the key detail: Harding died in August 1923 — before the Senate hearings revealed the money trail. That timing matters when judging what he knew.')), nextBtn('Next: identify the official ▸', s3)); }
+          if (right === order.length) { pts += Math.max(4, 12 - tries * 2); sfx('correct'); fb.append(feedback('', 'Timeline correct!', h('div', 'Notice the key detail: Harding died in August 1923, before the Senate hearings revealed the money trail. That timing matters when judging what he knew.')), nextBtn('Next: identify the official ▸', s3)); }
           else { sfx('gentle'); fb.append(feedback('amber', `${right} of ${order.length} in the right place`, h('div', 'Green items are placed correctly; dates are now shown as clues. Rearrange and check again.')), h('button.link-btn', { onclick: () => { order = G.timeline.slice(); checked = true; draw(); fb.append(nextBtn('Continue ▸', s3)); } }, 'Show me the correct order')); }
         } }, 'Check timeline');
         sh.set(h('div.g-card', h('div.g-kicker', 'STEP 2 · BUILD THE TIMELINE'), h('div.g-title', 'Put the events in order'), h('p', 'Use the arrows to arrange events from earliest (top) to latest (bottom).'), ul, h('div', { style: { marginTop: '10px' } }, check)), fb);
@@ -259,7 +259,7 @@
         const rating = total >= 60 ? 'Pulitzer-worthy investigator' : total >= 45 ? 'Senior reporter' : total >= 30 ? 'Cub reporter' : 'Junior fact-checker';
         sh.set(h('div.g-card', h('div.g-kicker', 'CASE CLOSED'), h('div.g-title', 'Investigator rating: ' + rating), h('p', `Score: ${total} (including ${factPts} points for separating facts from assumptions).`),
           h('div.paper-doc', { style: { fontFamily: 'var(--f-type)', fontSize: '15px', lineHeight: '1.6' } }, G.summary),
-          h('p', { style: { marginTop: '12px' } }, h('b', 'Final question: '), 'What safeguards should prevent officials from using public resources for private gain? Think about competitive bidding, independent auditors (remember the 1921 GAO?), a free press, and congressional oversight. (EQ A1, C1)')),
+          h('p', { style: { marginTop: '12px' } }, h('b', 'Final question: '), 'What safeguards should prevent officials from using public resources for private gain? Think about competitive bidding, independent auditors (remember the 1921 GAO?), a free press, and congressional oversight. ')),
           nextBtn('Finish ✓', () => NF.UI.closeTop()));
         sh.finish(total);
       };
@@ -289,7 +289,7 @@
         row._pts = pts; row._id = c.id;
         return row;
       });
-      sh.set(h('div.g-card', h('div.g-kicker', 'FICTIONAL ADVISER · 1925'), h('div.g-title', 'Write the federal budget'), h('span.sim-label', 'SIMPLIFIED SIMULATION — NOT COOLIDGE’S ACTUAL BUDGET'), h('p', G.rules),
+      sh.set(h('div.g-card', h('div.g-kicker', 'FICTIONAL ADVISER · 1925'), h('div.g-title', 'Write the federal budget'), h('span.sim-label', 'SIMPLIFIED SIMULATION, NOT COOLIDGE’S ACTUAL BUDGET'), h('p', G.rules),
         h('p', { style: { fontSize: '15px', color: '#6a5a48' } }, 'Scoring rule: each point adds its listed effects to the indicators. “Debt reduction” goes down when you spend on programs and up when you retire debt.')),
         left, h('div.budget-grid', rows), indBox, submit);
       update();
@@ -302,11 +302,11 @@
           h('div.ind-grid', Object.entries(G.indicators).map(([k, name]) => h('div.ind', h('b', (r[k] > 0 ? '+' : '') + r[k]), name))),
           h('h3', { style: { color: '#7a2630', fontFamily: 'var(--f-pixel)' } }, 'Advantages, winners and losers of your choices'),
           top.map((c) => h('div.arg-item', h('b', `${c.name} (${alloc[c.id]} pts): `), `Benefits ${c.helps}. Trade-off: ${c.hurts}.`)),
-          (alloc.farm === 0 ? h('div.arg-item.counter', h('b', 'Who was left out: '), 'With no farm relief, farm families facing low crop prices get no direct help — the situation many farmers experienced in the 1920s.') : null),
+          (alloc.farm === 0 ? h('div.arg-item.counter', h('b', 'Who was left out: '), 'With no farm relief, farm families facing low crop prices get no direct help, which is the situation many farmers experienced in the 1920s.') : null),
           (alloc.tax === 0 && alloc.debt === 0 ? h('div.arg-item.counter', h('b', 'Who was left out: '), 'Without tax cuts or debt reduction, investors and taxpayers who wanted a smaller government might lose confidence.') : null),
           h('h3', { style: { color: '#7a2630', fontFamily: 'var(--f-pixel)' } }, 'How does this compare with the real administration?'),
           feedback('blue', 'The historical record', h('div', G.actual), ...G.srcs.map(srcLine)),
-          h('p', { style: { marginTop: '10px' } }, h('b', 'Economic reasoning (EQ C1): '), 'Every point you spent somewhere was a point you could not spend elsewhere. That is opportunity cost — the same trade-off Coolidge, Mellon and Congress argued about.')),
+          h('p', { style: { marginTop: '10px' } }, h('b', 'Economic reasoning: '), 'Every point you spent somewhere was a point you could not spend elsewhere. That is opportunity cost, the same trade-off Coolidge, Mellon and Congress argued about.')),
           h('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } }, nextBtn('Try a different budget', () => { NF.UI.closeTop(); Games.g_r4(); }), nextBtn('Finish ✓', () => NF.UI.closeTop())));
         sh.finish(null);
       };
@@ -343,7 +343,7 @@
         const flow = G.flows.find((f) => f.from === from && f.to === id && !done.has(f));
         const a = from; from = null; Object.values(nodeEls).forEach((e) => e.classList.remove('sel'));
         fb.innerHTML = '';
-        if (!flow) { sfx('gentle'); fb.append(feedback('amber', 'That link wasn’t part of the Dawes-era cycle', h('div', 'Hint: start with who had money to lend after the war — and remember the money traveled in a circle.'))); return; }
+        if (!flow) { sfx('gentle'); fb.append(feedback('amber', 'That link wasn’t part of the Dawes-era cycle', h('div', 'Hint: start with who had money to lend after the war, and remember the money traveled in a circle.'))); return; }
         // choose the label
         labelBox.innerHTML = '';
         labelBox.append(h('p', { style: { textAlign: 'center', margin: '10px 0 0' } }, 'Good connection! What kind of payment is this?'),
@@ -368,7 +368,7 @@
           bs.forEach((b, k) => { b.disabled = true; b.classList.remove('sel'); b.classList.add(S.opts[k].a ? 'right' : (sel.has(k) ? 'wrong' : 'x')); b.firstChild.textContent = (S.opts[k].a ? '☑ ' : '☐ ') + S.opts[k].t; });
           const right = S.opts.every((o, k) => o.a === sel.has(k));
           sfx(right ? 'correct' : 'gentle');
-          fb2.append(feedback(right ? '' : 'amber', right ? 'Exactly — the whole chain is affected' : 'Every link depended on the first one', h('div', S.exp), srcLine(G.src)), feedback('blue', 'Important caveat', h('div', S.caveat)), nextBtn('Bonus question ▸', bonus));
+          fb2.append(feedback(right ? '' : 'amber', right ? 'Exactly: the whole chain is affected' : 'Every link depended on the first one', h('div', S.exp), srcLine(G.src)), feedback('blue', 'Important caveat', h('div', S.caveat)), nextBtn('Bonus question ▸', bonus));
         } }, 'Check my prediction');
         sh.set(h('div.g-card', h('div.g-kicker', 'STEP 2 · WHAT IF?'), h('div.g-title', S.title), h('p', S.prompt), h('div.g-opts', bs), h('div', { style: { marginTop: '10px' } }, check)), fb2);
       };
@@ -377,7 +377,7 @@
         const Q = G.kellogg, fb3 = h('div');
         const bs = Q.opts.map((o, k) => h('button.g-opt', { onclick: () => { bs.forEach((b) => (b.disabled = true)); bs[Q.a].classList.add('right'); if (k !== Q.a) bs[k].classList.add('wrong'); sfx(k === Q.a ? 'correct' : 'gentle');
           fb3.append(feedback(k === Q.a ? '' : 'amber', k === Q.a ? 'Correct' : 'Not quite', h('div', Q.exp), srcLine('ohs-kellogg')),
-            h('p', { style: { marginTop: '10px' } }, h('b', 'Takeaway (EQ D1): '), 'Normalcy did not mean isolation. American loans, treaties, and tariffs tied the U.S. to the world — and made the whole system vulnerable when U.S. lending stopped.'),
+            h('p', { style: { marginTop: '10px' } }, h('b', 'Takeaway: '), 'Normalcy did not mean isolation. American loans, treaties, and tariffs tied the U.S. to the world, and made the whole system vulnerable when U.S. lending stopped.'),
             nextBtn('Finish ✓', () => NF.UI.closeTop()));
           sh.finish(null);
         } }, o));
@@ -404,44 +404,56 @@
           const ok = k === p.a;
           if (!ok) bs[k].classList.add('sel');
           sfx(ok ? 'correct' : 'page');
-          fb.append(feedback(ok ? '' : 'blue', ok ? 'A direct connection' : 'That mattered in the 1920s — but the most direct connection is: ' + p.opts[p.a], h('div', p.exp), srcLine(p.src)),
+          fb.append(feedback(ok ? '' : 'blue', ok ? 'A direct connection' : 'That mattered in the 1920s, but the most direct connection is: ' + p.opts[p.a], h('div', p.exp), srcLine(p.src)),
             nextBtn(i < G.profiles.length - 1 ? 'Next person ▸' : 'Reflect ▸', () => show(i + 1)));
         } }, o));
-        sh.set(h('div.g-card', h('div.profile', cv, h('div', h('span.composite-tag', 'HISTORICAL COMPOSITE — NOT A REAL INDIVIDUAL'), h('div.g-title', { style: { margin: '0' } }, p.name), h('div.g-kicker', p.role.toUpperCase()), h('p', { style: { marginTop: '8px' } }, p.story))),
+        sh.set(h('div.g-card', h('div.profile', cv, h('div', h('span.composite-tag', 'HISTORICAL COMPOSITE, NOT A REAL INDIVIDUAL'), h('div.g-title', { style: { margin: '0' } }, p.name), h('div.g-kicker', p.role.toUpperCase()), h('p', { style: { marginTop: '8px' } }, p.story))),
           h('p', h('b', 'Which policy or event most directly shaped this person’s life?')), h('div.g-opts', bs)), fb);
       };
       const end = () => {
         sh.set(h('div.g-card', h('div.g-kicker', 'PERSPECTIVES GATHERED · 6 OF 6'), h('div.g-title', 'Normalcy for whom?'),
           h('p', 'The same decade brought tariffs and tax cuts that helped a factory owner, an injunction that hurt a railroad family, vetoes that left a farmer struggling, a quota that kept a family apart, a court case that expanded free speech, and Northern jobs shadowed by discrimination.'),
-          h('p', h('b', 'Reflect (EQ A2, D2): '), 'Can a country truly return to normal if its definition of normal excludes or disadvantages some of its people? Carry your answer to the Courthouse.')),
+          h('p', h('b', 'Reflect: '), 'Can a country truly return to normal if its definition of normal excludes or disadvantages some of its people? Carry your answer to the Courthouse.')),
           nextBtn('Finish ✓', () => NF.UI.closeTop()));
         sh.finish(null);
       };
     },
 
     /* ================= FINAL: JUDGE NORMALCY ================= */
+    // The courthouse has two parts: (1) a verdict backed by evidence, (2) written answers checked by a rubric.
     verdict() {
+      const stage = h('div');
+      const tabs = h('div.tabs', { role: 'tablist' });
+      const tabBtn = (label, fn) => h('button.tab', { role: 'tab', onclick: (e) => { [...tabs.children].forEach((t) => t.classList.remove('on')); e.currentTarget.classList.add('on'); fn(); } }, label);
+      const t1 = tabBtn('1. Your verdict', () => Games.verdictPart(stage));
+      const t2 = tabBtn('2. Written answers', () => Games.writtenPart(stage));
+      tabs.append(t1, t2);
+      NF.UI.modal({ kicker: 'The Courthouse', title: 'Judge Normalcy', body: h('div', tabs, stage), cls: 'game-modal', closeText: 'Leave the bench' });
+      t1.classList.add('on');
+      Games.verdictPart(stage);
+    },
+
+    verdictPart(stage) {
       const C = NF.CONTENT, S = NF.Save.data;
       const visited = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'].filter((r) => S.visited[r]).length;
-      const stage = h('div');
-      NF.UI.modal({ kicker: 'THE COURTHOUSE · FINAL REFLECTION', title: 'Judge Normalcy', body: stage, cls: 'game-modal', closeText: 'Leave the bench (Esc)', icon: '⚖' });
       let choice = S.verdict ? S.verdict.choice : null;
       const picked = new Set(S.verdict ? S.verdict.evidence : []);
+      const go = h('button.deco-btn', { style: { marginTop: '14px' }, onclick: () => argue() });
+      const upd = () => { go.disabled = !(choice && picked.size >= 2); go.textContent = choice && picked.size >= 2 ? 'Build my argument ▸' : `Choose a verdict and ${Math.max(0, 2 - picked.size)} more piece(s) of evidence`; };
       const intro = () => {
         stage.innerHTML = '';
-        stage.append(h('div.g-card', h('div.g-kicker', 'THE CENTRAL QUESTION'), h('div.g-title', '“Did America’s return to normalcy succeed?”'),
-          h('p', 'There is no single correct verdict. Historians disagree — but every strong interpretation is built on evidence. Choose a conclusion, then support it with at least two pieces of evidence from the museum.'),
-          visited < 6 ? feedback('amber', `You have visited ${visited} of 6 exhibits`, h('div', 'You can deliver a verdict now, but you will have more evidence if you visit every exhibit first. Press M to travel.')) : null),
-          h('h3', '1 · Choose your verdict'),
+        stage.append(h('div.g-card', h('div.g-kicker', 'The central question'), h('div.g-title', '“Did America’s return to normalcy succeed?”'),
+          h('p', 'There is no single correct verdict. Historians disagree, but every strong interpretation is built on evidence. Choose a conclusion, then support it with at least two pieces of evidence from the museum.'),
+          visited < 6 ? feedback('amber', `You have visited ${visited} of 6 exhibits`, h('div', 'You can give a verdict now, but you will have more evidence if you visit every exhibit first. Press M to travel.')) : null),
+          h('h3', 'Step 1: choose your verdict'),
           h('div.verdict-opts', Object.entries(C.VERDICTS).map(([k, v]) => h('button.vopt' + (choice === k ? '.sel' : ''), { onclick: (e) => { choice = k; stage.querySelectorAll('.vopt').forEach((b) => b.classList.remove('sel')); e.currentTarget.classList.add('sel'); sfx('click'); upd(); } }, h('b', v.name), v.d))),
-          h('h3', '2 · Select your evidence (at least two)'),
-          h('div.ev-grid', C.EVIDENCE.map((e) => h('button.ev' + (picked.has(e.id) ? '.sel' : '') + (S.examined[e.art] ? '.seen' : ''), { onclick: (ev) => { if (picked.has(e.id)) picked.delete(e.id); else picked.add(e.id); ev.currentTarget.classList.toggle('sel'); sfx('click'); upd(); } },
-            h('small', C.ROOMS[e.room] ? 'EXHIBIT ' + C.ROOMS[e.room].num : ''), e.label))),
+          h('h3', 'Step 2: select your evidence (at least two)'),
+          h('p.muted', 'Items marked “seen” are exhibits you have already examined.'),
+          h('div.ev-grid', C.EVIDENCE.map((e) => h('button.ev' + (picked.has(e.id) ? '.sel' : '') + (S.examined[e.art] ? '.seen' : ''), { 'aria-pressed': String(picked.has(e.id)), onclick: (ev) => { if (picked.has(e.id)) picked.delete(e.id); else picked.add(e.id); ev.currentTarget.classList.toggle('sel'); ev.currentTarget.setAttribute('aria-pressed', String(picked.has(e.id))); sfx('click'); upd(); } },
+            h('small', C.ROOMS[e.room] ? 'Exhibit ' + C.ROOMS[e.room].num : ''), e.label))),
           go);
         upd();
       };
-      const go = h('button.deco-btn', { style: { marginTop: '14px' }, onclick: () => argue() }, 'Build my argument ▸');
-      const upd = () => { go.disabled = !(choice && picked.size >= 2); go.textContent = choice && picked.size >= 2 ? 'Build my argument ▸' : `Choose a verdict and ${Math.max(0, 2 - picked.size)} more piece(s) of evidence`; };
       const argue = () => {
         const V = C.VERDICTS[choice];
         const evs = C.EVIDENCE.filter((e) => picked.has(e.id));
@@ -449,29 +461,117 @@
         const counter = C.EVIDENCE.filter((e) => !picked.has(e.id) && !e.leans.includes(choice)).slice(0, 2);
         S.verdict = { choice, evidence: [...picked], at: Date.now() }; NF.Save.save();
         sfx('complete');
-        const ta = h('textarea.reflect-box', { placeholder: 'Optional: write your own short response (saved in this browser)…', oninput: (e) => { S.reflection = e.target.value; NF.Save.save(); } });
-        ta.value = S.reflection || '';
-        const copy = h('button.deco-btn.small.ghost', { onclick: () => {
-          const text = `My verdict: ${V.name}\n${V.d}\n\nEvidence:\n` + evs.map((e) => `- ${e.label}: ${e.notes[choice]}`).join('\n') + (S.reflection ? `\n\nMy reflection:\n${S.reflection}` : '');
-          NF.UI.copyFallback(text, () => NF.UI.toast('Verdict copied to clipboard', 'COPIED', '✓'));
-        } }, 'Copy my verdict');
         stage.innerHTML = '';
         stage.append(h('div.argument',
-          h('div.g-kicker', 'YOUR VERDICT'), h('div.g-title', V.name), h('p', V.d),
-          h('h3', { style: { color: '#7a2630', fontFamily: 'var(--f-pixel)' } }, 'How your evidence supports it'),
-          sup.length ? sup.map((e) => h('div.arg-item', h('b', e.label + ' — '), e.notes[choice])) : h('p', 'None of your evidence directly supports this verdict — consider choosing different evidence or a different conclusion.'),
-          comp.length ? [h('h3', { style: { color: '#a8602a', fontFamily: 'var(--f-pixel)' } }, 'Evidence that complicates your verdict'), comp.map((e) => h('div.arg-item.counter', h('b', e.label + ' — '), e.notes[choice]))] : null,
-          counter.length ? [h('h3', { style: { color: '#a8602a', fontFamily: 'var(--f-pixel)' } }, 'A historian might push back with…'), counter.map((e) => h('div.arg-item.counter', h('b', e.label + ' — '), e.notes[e.leans[0]]))] : null,
-          h('p', { style: { marginTop: '10px', fontSize: '15px' } }, 'Strong arguments acknowledge counter-evidence and explain why their conclusion still holds. That is how historians use multiple perspectives (EQ D2).')),
-          h('h3', 'Follow-up questions'), h('ul', C.FOLLOWUPS.map((q) => h('li', q))),
-          h('h3', 'Your written response (optional)'), ta,
-          h('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '14px' } }, h('button.deco-btn.small', { onclick: intro }, '◂ Revise my verdict'), copy,
-            h('button.deco-btn.small.teal', { onclick: () => { NF.UI.closeAll(); NF.UI.openBibliography(); } }, 'Open the bibliography')),
-          feedback('blue', 'What did America gain, fail to resolve, and leave out?', h('div', 'Gained: confidence, budget reform, growth, arms limits. Unresolved: corruption, farm distress, labor conflict, fragile global finance. Left out: many immigrants, workers, farmers, and Black Americans. Your verdict is how you weigh those together.')));
+          h('div.g-kicker', 'Your verdict'), h('div.g-title', V.name), h('p', V.d),
+          h('h3', 'How your evidence supports it'),
+          sup.length ? sup.map((e) => h('div.arg-item', h('b', e.label + ': '), e.notes[choice])) : h('p', 'None of your evidence directly supports this verdict. Consider choosing different evidence or a different conclusion.'),
+          comp.length ? [h('h3', 'Evidence that complicates your verdict'), comp.map((e) => h('div.arg-item.counter', h('b', e.label + ': '), e.notes[choice]))] : null,
+          counter.length ? [h('h3', 'A historian might push back with…'), counter.map((e) => h('div.arg-item.counter', h('b', e.label + ': '), e.notes[e.leans[0]]))] : null,
+          h('p', 'Strong arguments admit the counter-evidence and explain why their conclusion still holds.')),
+          h('h3', 'Questions to keep thinking about'), h('ul.plain', C.FOLLOWUPS.map((q) => h('li', q))),
+          h('div.btn-row',
+            h('button.deco-btn.small.ghost', { onclick: intro }, '◂ Revise my verdict'),
+            h('button.deco-btn.small', { onclick: () => { const tab = document.querySelectorAll('.tabs .tab')[1]; if (tab) tab.click(); } }, 'Next: written answers ▸')));
         NF.UI.updateHud();
-        NF.UI.toast('Verdict delivered', 'THE COURTHOUSE', '⚖');
+        NF.UI.toast('Verdict recorded', 'The Courthouse', '⚖');
       };
-      intro();
+      if (S.verdict && choice && picked.size >= 2) argue(); else intro();
+    },
+
+    /* ---------- written answers + rubric ---------- */
+    writtenPart(stage) {
+      const C = NF.CONTENT, S = NF.Save.data;
+      S.written = S.written || {};
+      stage.innerHTML = '';
+      stage.append(h('div.g-card',
+        h('div.g-kicker', 'Written answers'), h('div.g-title', 'Make your case in writing'),
+        h('p', 'Answer one or more questions in a few sentences. Each answer is checked against a four-point rubric: historical accuracy, specific evidence, reasoning, and connection to normalcy.'),
+        h('p.muted', 'How the checking works: this is an automatic rubric that looks for evidence from the museum, reasoning words, a connection to normalcy and common factual errors. It is not a teacher and it is not an AI, so it can miss good ideas. Any conclusion can earn full marks if it is well supported.')));
+      C.WRITTEN.forEach((W) => stage.append(Games.writtenCard(W)));
+    },
+    writtenCard(W) {
+      const S = NF.Save.data;
+      S.written = S.written || {};
+      const saved = S.written[W.id] || {};
+      const ta = h('textarea.reflect-box', { 'aria-label': W.q, placeholder: 'Write your answer here. Make a claim, give evidence, explain why.' });
+      ta.value = saved.answer || '';
+      const count = h('span.muted', '');
+      const updCount = () => { const n = (ta.value.match(/[A-Za-z0-9’']+/g) || []).length; count.textContent = n + ' words'; };
+      ta.oninput = () => { updCount(); S.written[W.id] = Object.assign({}, S.written[W.id] || {}, { answer: ta.value }); NF.Save.save(); };
+      updCount();
+      const out = h('div.grade-out', { 'aria-live': 'polite' });
+      const render = (r, rec) => {
+        out.innerHTML = '';
+        const rows = r.criteria.map((c) => h('li.crit' + (c.ok ? '.ok' : '.no'), h('span.crit-mark', c.ok ? '✓' : '○'), h('div', h('b', c.name), h('div', c.msg))));
+        out.append(h('div.grade',
+          h('div.grade-head', h('span.grade-score', r.score + ' / 4'), h('span', r.headline)),
+          h('ul.crits', rows),
+          r.tips.length ? h('div.grade-tips', h('b', 'To improve:'), h('ul.plain', r.tips.map((t) => h('li', t)))) : h('p', 'This answer meets every part of the rubric. A teacher may still have more to say.'),
+          rec && rec.attempts ? h('p.muted', 'Submitted ' + rec.attempts + (rec.attempts === 1 ? ' time' : ' times') + '. Edit your answer above and submit again to revise it.') : null));
+      };
+      const submit = h('button.deco-btn.small', { onclick: () => {
+        const r = Games.grade(W, ta.value);
+        if (!r) { out.innerHTML = ''; out.append(feedback('amber', 'Write a little more first', h('div', 'Your answer needs at least a couple of sentences before it can be checked.'))); return; }
+        const prev = S.written[W.id] || {};
+        S.written[W.id] = { answer: ta.value, score: r.score, at: Date.now(), attempts: (prev.attempts || 0) + 1, result: r };
+        NF.Save.save();
+        sfx(r.score >= 3 ? 'correct' : 'gentle');
+        render(r, S.written[W.id]);
+      } }, 'Submit answer');
+      if (saved.result) render(saved.result, saved);
+      return h('div.g-card.written',
+        h('div.g-kicker', W.title), h('p.wq', W.q), h('p.muted', 'Tip: ' + W.tip),
+        ta, h('div.btn-row', submit, count), out);
+    },
+
+    // Transparent rubric scoring. Returns null when the answer is too short to check.
+    grade(W, text) {
+      const C = NF.CONTENT;
+      const raw = (text || '').trim();
+      const words = raw.match(/[A-Za-z0-9’']+/g) || [];
+      if (words.length < 12) return null;
+      const t = raw.toLowerCase().replace(/’/g, "'");
+      const found = [];
+      W.evidence.forEach(([re, label]) => { if (new RegExp(re, 'i').test(t) && !found.includes(label)) found.push(label); });
+      const flags = C.RED_FLAGS.filter((f) => new RegExp(f.re, 'i').test(t));
+      const connectors = ['because', 'therefore', 'this shows', 'which shows', 'this means', 'which meant', 'as a result', 'since', 'so that', 'led to', 'demonstrates', 'proves', 'suggests', 'reveals', 'shows that', 'for example', 'for instance', 'however', 'although', 'which is why'];
+      const reasons = connectors.filter((c) => t.includes(c));
+      const claimRe = /\b(i think|i believe|i argue|in my view|did not|didn't|led to|revealed|showed|failed|succeeded|protected|helped|hurt|served|benefited|mostly|partly|partially|clearly|was a|were)\b/;
+      const hasClaim = claimRe.test(t);
+      const conn = W.connect.filter((c) => t.includes(c));
+      const crit = [];
+      const tips = [];
+      // 1. historical accuracy
+      if (flags.length) {
+        crit.push({ name: 'Historical accuracy', ok: false, msg: 'Part of your answer conflicts with the evidence. ' + flags.map((f) => f.fix).join(' ') });
+        tips.push('Correct the factual problem described above, then submit again.');
+      } else if (found.length) {
+        crit.push({ name: 'Historical accuracy', ok: true, msg: 'Your historical details match the museum’s evidence, and no common errors were found.' });
+      } else {
+        crit.push({ name: 'Historical accuracy', ok: false, msg: 'There is not enough specific history here to check for accuracy yet.' });
+      }
+      // 2. specific evidence
+      if (found.length >= 2) crit.push({ name: 'Specific evidence', ok: true, msg: 'You used specific evidence: ' + found.slice(0, 4).join(', ') + '.' });
+      else if (found.length === 1) { crit.push({ name: 'Specific evidence', ok: true, msg: 'You used one piece of specific evidence (' + found[0] + '). A second example would strengthen the argument.' }); tips.push('Add a second specific example, such as a date, a law, a person or an artifact you examined.'); }
+      else { crit.push({ name: 'Specific evidence', ok: false, msg: 'Your answer needs a specific historical example from the museum.' }); tips.push('Name a specific person, law, event, date or artifact, for example ' + W.evidence.slice(0, 3).map((e) => e[1]).join(', ') + '.'); }
+      // 3. reasoning
+      const longEnough = words.length >= 35;
+      if (reasons.length && longEnough && hasClaim) crit.push({ name: 'Reasoning', ok: true, msg: 'You explain how your evidence supports your claim (for example, using “' + reasons[0] + '”).' });
+      else {
+        crit.push({ name: 'Reasoning', ok: false, msg: !hasClaim ? 'State your claim clearly: did it succeed, fail, or something in between?' : !reasons.length ? 'Your answer lists facts but does not yet explain why they support your claim.' : 'Develop your explanation further; a few more sentences will help.' });
+        tips.push(!reasons.length ? 'Connect your evidence to your claim with words like “because,” “this shows,” or “as a result,” and explain the link.' : 'Aim for at least three or four sentences: a claim, the evidence, and an explanation.');
+      }
+      // 4. connection to normalcy
+      if (conn.length) crit.push({ name: 'Connection to normalcy', ok: true, msg: 'You tie your argument to the bigger question (you mention ' + conn.slice(0, 2).map((c) => '“' + c + '”').join(' and ') + ').' });
+      else {
+        crit.push({ name: 'Connection to normalcy', ok: false, msg: 'Tie your argument back to the promise of normalcy and what it meant for the country.' });
+        tips.push(W.id === 'w1' ? 'Explain what the scandal means for public trust, government accountability, or Harding’s promise of normalcy.' : W.id === 'w2' ? 'Say whether the policy served the public interest as a whole, and how that fits the promise of normalcy.' : 'Say whether freedom and opportunity were shared equally, and what that means for normalcy.');
+      }
+      if (W.id === 'w1' && found.some((f) => /Teapot|Fall|leases|bribe/.test(f)) && !conn.some((c) => /trust|accountab|oversight|public/.test(c))) tips.push('You cite Teapot Dome. Now explain its significance: how did the scandal affect public trust and government accountability?');
+      const score = crit.filter((c) => c.ok).length;
+      const headline = score === 4 ? 'Strong, well-supported answer.' : score === 3 ? 'Good answer with one area to improve.' : score === 2 ? 'A start. Two parts of the rubric still need work.' : 'Keep building this answer using the suggestions below.';
+      return { score, headline, criteria: crit, tips: [...new Set(tips)] };
     },
   });
 })();
