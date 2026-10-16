@@ -30,9 +30,9 @@ fs.writeFileSync(path.join(root, 'docs/BIBLIOGRAPHY.md'), '# Works Cited: The No
   '\n\n## Background music (public-domain recordings)\n\n' + Object.values(C.MUSIC).map((m) => `- “${m.title},” ${m.artist}, ${m.year}. ${m.url}`).join('\n') + '\n');
 
 let sc = '# The Normalcy Files: Recording Scripts\n\nRead these naturally, like you are guiding a friend through a museum (about 160–170 words per minute). These scripts are also the on-screen captions and transcripts. If you change the wording when recording, update `js/content.js` to match, then run `node tools/build-docs.js`.\n\n';
-sc += '## Help-desk welcome video\n\nSave as **media/video/helpdesk.mp4**. Captions: **media/captions/helpdesk.vtt** (re-time the cues to match your video).\n\nSuggested shots: team on camera, then a screen recording of walking around, opening an artifact, talking to a guide, playing a mini-game, using the map, and the Courthouse.\n\n';
+sc += '## Help-desk welcome video\n\nSave as **media/video/helpdesk.mp4**. Captions: **media/captions/helpdesk.vtt**, timed to the recording. Below is the transcript of what was actually said.\n\n';
 C.HELPDESK.forEach((l, i) => { sc += `${i + 1}. ${l}\n`; });
-sc += `\n*(${words(C.HELPDESK)} words, about ${Math.round(words(C.HELPDESK) / WPS)} seconds)*\n`;
+sc += `\n*(${words(C.HELPDESK)} words, ${Math.round(C.HELPDESK_CUES[C.HELPDESK_CUES.length - 1][1])} seconds as recorded)*\n`;
 ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'].forEach((id) => {
   const r = C.ROOMS[id];
   sc += `\n## Exhibit ${r.num}: ${r.title}\n\nSave as **media/audio/room${r.num}.mp3**. Theme: *${r.question}*\n\n${r.narration.join('\n\n')}\n\n*(${words(r.narration)} words, about ${Math.round(words(r.narration) / WPS)} seconds)*\n`;
@@ -40,8 +40,8 @@ sc += `\n*(${words(C.HELPDESK)} words, about ${Math.round(words(C.HELPDESK) / WP
 fs.writeFileSync(path.join(root, 'docs/SCRIPTS.md'), sc);
 
 const fmt = (s) => { const m = Math.floor(s / 60); return '00:' + String(m).padStart(2, '0') + ':' + (s % 60).toFixed(3).padStart(6, '0'); };
-let t = 0, vtt = 'WEBVTT\n\nNOTE Placeholder timings at a natural speaking pace. Re-time these cues to match your recorded help-desk video.\n\n';
-C.HELPDESK.forEach((l, i) => { const d = Math.max(2.2, l.split(/\s+/).length / WPS); vtt += `${i + 1}\n${fmt(t)} --> ${fmt(t + d)}\n${l}\n\n`; t += d; });
+let t = 0, vtt = 'WEBVTT\n\nNOTE Timed to the recorded help-desk video (media/video/helpdesk.mp4).\n\n';
+C.HELPDESK_CUES.forEach(([a, b, l], i) => { vtt += `${i + 1}\n${fmt(a)} --> ${fmt(b)}\n${l}\n\n`; t = b; });
 fs.writeFileSync(path.join(root, 'media/captions/helpdesk.vtt'), vtt);
 
 const dash = [html, sc, vtt].join('').split(String.fromCharCode(0x2014)).length - 1;

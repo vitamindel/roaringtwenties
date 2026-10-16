@@ -30,7 +30,7 @@ Then open **http://localhost:8000**. Any static server works. There is nothing t
 | **E** or **Space** | Examine, talk, play, or enter a door |
 | **1, 2, 3, 4** | Choose a question during a conversation |
 | **M** | Map, room directory and fast travel |
-| **N** | Room narration (with captions and transcript) |
+| **N** | Replay or stop the room narration (it also starts by itself the first time you enter an exhibit) |
 | **Esc** | Close a window, or open pause and settings |
 
 Phones and tablets get an on-screen joystick and an **E** button. You can also click the "Press E" prompt.
@@ -90,10 +90,21 @@ Tracks never overlap: the old one fades out before the next begins. Music lowers
 |---|---|---|
 | Help-desk video | `media/video/helpdesk.mp4` | The title screen plays a computer-voice preview of the script, with captions |
 | Video captions | `media/captions/helpdesk.vtt` | Captions fall back to automatic timing from the script |
-| Room narrations | `media/audio/room1.mp3` … `room6.mp3` | The narration panel uses a computer voice, with captions |
+| Room narrations (done) | `media/audio/room1.mp3` … `room6.mp3` | The narration panel uses a computer voice, with captions |
 | Team names | `js/content.js`, `TEAM` list at the top | Shows "[Your name here]" |
 
-All scripts are in **`docs/SCRIPTS.md`**: the help-desk video runs about 70 seconds and each room narration about 60–75 seconds at a natural pace. If you change any wording while recording, update the matching text in `js/content.js`, then run `node tools/build-docs.js` to regenerate the scripts, captions and bibliography.
+The help-desk script is in **`docs/SCRIPTS.md`** (about 70 seconds).
+
+**Narration (recorded).** Each exhibit plays its student recording the first time a visitor walks in. Captions and a live transcript appear automatically, so nobody has to switch them on. Each line is timed to the recording, and a pixel avatar of the narrator, drawn in their costume, moves its mouth while they speak.
+
+| Exhibit | Narrator | Costume on the avatar |
+|---|---|---|
+| 1 and 2 | Nitya | Wide-brimmed hat with a ribbon bow, cable-knit sweater |
+| 3 | Ike | Bowler hat, patterned blazer, saxophone neck strap |
+| 4 and 6 | Ashwin | Navy quarter-zip over a white shirt and navy tie, glasses |
+| 5 | Dyuti | Flapper headband with a jeweled brooch, sherpa jacket |
+
+The captions are the `cues` lists in `js/content.js` (each line is `[start time in seconds, text]`). If you re-record a room, update its times and text there. Visitors can turn captions off with the Captions button, and automatic narration can be switched off in Esc, Settings. The original uploads (`media/audio/exhibit1.mp4` and so on) were converted into `room1.mp3` … `room6.mp3`, which are the files the game uses.
 
 ## 6. Editing the historical content
 

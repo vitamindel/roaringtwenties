@@ -54,20 +54,36 @@
   const ROOM_MUSIC = { town: 'hub', r1: 'r1', r2: 'r2', r3: 'r3', r4: 'r4', r5: 'r5', r6: 'r6', court: 'r6', library: 'r2' };
 
   /* -------------------------------------------------------------------
-     4. HELP-DESK VIDEO SCRIPT (about 65–70 seconds)
+     4. HELP-DESK VIDEO TRANSCRIPT (71 seconds, as recorded)
      ------------------------------------------------------------------- */
-  const HELPDESK = [
-    'Hi, and welcome to The Normalcy Files, a playable museum about America from 1920 to 1929.',
-    'After World War One, Warren G. Harding promised a “return to normalcy.” Our question: did normalcy really restore stability, or did it hide deeper problems?',
-    'Walk with W-A-S-D or the arrow keys. On a phone, use the on-screen pad.',
-    'Walk up to anything sparkling and press E or Space. Each artifact opens an archive file with its date, its creator, and whether it is a primary or secondary source.',
-    'Walk into a door to enter a building, and step on the red exit mat to leave.',
-    'Every room has a short mini-game marked with a gold star. You can also talk to the museum guides and pick the questions you want to ask.',
-    'Press N to hear the room’s narration, with captions and a transcript.',
-    'Lost? Press M for the map. You can fast-travel to any exhibit, and the gold arrow at the top of the screen always points to your next stop.',
-    'Visit all six exhibits, then make your case at the Courthouse. The Library holds every source we used.',
-    'Okay, let’s open the files!',
+  // Timed to the recorded video, media/video/helpdesk.mp4: [start s, end s, words spoken]
+  const HELPDESK_CUES = [
+    [4.0, 5.9, 'Welcome back to the Normalcy Files.'],
+    [6.0, 8.2, 'We’ll be taking a trip through the Roaring Twenties,'],
+    [8.3, 11.8, 'a decade of jazz, dancing, and exciting new trends,'],
+    [16.1, 19.3, 'a time of incredible creativity, cultural change,'],
+    [19.4, 21.6, 'and people fighting to be heard,'],
+    [21.7, 25.2, 'and the decade of questions about inequality, political scandals,'],
+    [25.3, 28.9, 'and whether America was really as prosperous as it seemed to be.'],
+    [29.2, 32.1, 'So what was life really like in the 1920s?'],
+    [32.2, 36.6, 'And did President Harding’s promise of a return to normalcy actually work?'],
+    [37.1, 38.2, 'That’s where you come in.'],
+    [38.2, 41.5, 'Explore the exhibits and discover the stories behind the artifacts.'],
+    [41.6, 44.3, 'Use WASD or the arrow keys to move.'],
+    [44.3, 48.8, 'See something sparkling? Use E or Space to investigate.'],
+    [49.0, 53.6, 'Find gold stars, play mini-games, and press N to hear the room’s narration.'],
+    [53.7, 57.9, 'Need help finding your way? Press M for the map and follow the gold arrow.'],
+    [58.1, 61.2, 'Visit all six exhibits, check your sources in the Library,'],
+    [61.3, 64.2, 'and head down to the Courthouse to make your final judgment.'],
+    [64.3, 68.9, 'The past is full of surprises, and the truth is waiting to be discovered.'],
+    [69.0, 71.2, 'Let’s open the files!'],
   ];
+  // the same words as whole sentences, for the transcript
+  const HELPDESK = HELPDESK_CUES.reduce((out, c) => {
+    const last = out[out.length - 1];
+    if (last && !/[.?!]$/.test(last)) out[out.length - 1] = last + ' ' + c[2]; else out.push(c[2]);
+    return out;
+  }, []);
 
   /* -------------------------------------------------------------------
      5. THE TWO BIG QUESTIONS
@@ -162,82 +178,99 @@
       num: 1, title: 'The Aftermath of World War I', building: 'Union Station', short: 'Aftermath of WWI', color: '#7a3a2e',
       question: 'Why did Americans want a return to normalcy?',
       objective: 'Examine the sparkling exhibits, then try the ticket window game.',
-      narration: [
-        'Picture this station in 1919. The war is over and trains are bringing soldiers home, but home does not feel calm.',
-        'Factories that ran on war orders are slowing down. Prices jumped during the war, and then the economy fell into a sharp depression in 1920 and 1921. Wages dropped and more than twenty thousand businesses failed.',
-        'Workers went on strike across the country: in Seattle, in the steel mills, and even among the Boston police. After a string of bombings in 1919, many Americans feared a communist revolution, and federal agents arrested thousands of suspected radicals in the Palmer Raids.',
-        'And President Wilson’s fight to join the League of Nations ended in defeat in the Senate.',
-        'So when Senator Warren G. Harding said America needed “not heroics, but healing… not revolution, but restoration,” a lot of tired voters listened. In November 1920 he won about sixty percent of the popular vote.',
-        'Remember, though: not every American wanted the same thing from normalcy, and the problems in this room did not disappear on election day. Let’s follow Harding to the White House and see what normalcy looked like in practice.',
+      narrator: 'nitya',
+      // [start time in seconds, caption]. Timed to the student recording; also used as the transcript.
+      cues: [
+        [0.0, 'Picture America in 1919.'],
+        [3.2, 'Soldiers were returning home, but the country faced economic trouble, strikes, and fears of a communist revolution.'],
+        [9.2, 'The Palmer Raids arrested thousands of suspected radicals, while Wilson’s plan to join the League of Nations failed.'],
+        [15.5, 'Americans were exhausted by instability, so when Warren G. Harding promised a return to normalcy, voters embraced his message and gave him a landslide victory in 1920.'],
+        [24.5, 'But did normalcy solve America’s problems, or simply promise relief?'],
       ],
     },
     r2: {
       num: 2, title: 'Inside Harding’s White House', building: 'The White House', short: 'Harding’s White House', color: '#2c4a6a',
       question: 'What did normalcy mean for government and business?',
       objective: 'Read the three laws on the desk, then play the cabinet-table game.',
-      narration: [
-        'Welcome to Warren Harding’s White House. He served from March 1921 until he died in August 1923.',
-        'It is easy to think normalcy meant the government simply did nothing. That is not quite right. Harding’s government made deliberate choices.',
-        'In 1921 he signed the Budget and Accounting Act, which made the president send Congress one complete federal budget every year and created an independent office to audit government spending.',
-        'His Treasury Secretary, Andrew Mellon, pushed tax cuts, starting with the Revenue Act of 1921. In 1922 the Fordney-McCumber Tariff raised taxes on imported goods to protect American manufacturers.',
-        'Supporters said these policies would build business confidence and bring back prosperity. Critics said they helped the wealthy and big industry most.',
-        'Labor felt that tension directly. When about four hundred thousand railroad shop workers went on strike in 1922, Harding’s attorney general won a sweeping court order against them.',
-        'So normalcy was a set of choices about whom government should help, and how. Next, let’s see what happened when some officials used public power for private gain.',
+      narrator: 'nitya',
+      // [start time in seconds, caption]. Timed to the student recording; also used as the transcript.
+      cues: [
+        [0.0, 'Harding’s return to normalcy meant supporting businesses and limiting government spending.'],
+        [4.9, 'His administration introduced a federal budget system, cut taxes, and raised tariffs to protect American manufacturers.'],
+        [11.5, 'Supporters believed these policies would restore prosperity, while critics argued the wealthy benefited the most.'],
+        [17.3, 'Labor disputes revealed another side of his presidency.'],
+        [20.2, 'During a major railroad strike in 1922, Harding’s administration obtained a sweeping court order against workers.'],
+        [27.1, 'Normalcy was not simply doing less.'],
+        [28.7, 'It meant making choices about who the government would help.'],
       ],
     },
     r3: {
       num: 3, title: 'The Teapot Dome Scandal', building: 'The Daily Ledger', short: 'Teapot Dome', color: '#4a3a2a',
       question: 'What happens when public office serves private interests?',
       objective: 'Study the evidence board, then open the case file on the editor’s desk.',
-      narration: [
-        'Grab a notebook, reporter. Something smells like oil.',
-        'Before the war, the government set aside oil fields as an emergency fuel supply for the Navy: one at Elk Hills in California, and one under a rock formation in Wyoming called Teapot Dome.',
-        'In 1921, President Harding moved control of these reserves from the Navy to the Interior Department, run by Secretary Albert B. Fall.',
-        'Fall then leased the reserves to two oilmen, Harry Sinclair and Edward Doheny, secretly and without competitive bidding. Around the same time, Fall suddenly had a lot of money.',
-        'In April 1922, the Wall Street Journal reported the Teapot Dome lease, and the Senate opened an investigation. Senator Thomas Walsh asked the key question: how did Fall get so rich so quickly?',
-        'The answer included a one-hundred-thousand-dollar “loan” from Doheny. In 1929, Fall was convicted of accepting a bribe, the first former cabinet officer to go to prison.',
-        'Here is the careful part. Harding died in 1923, before most of this came out, and there is no evidence he took oil bribes himself. Good reporting separates proof from rumor.',
-        'So ask yourself: what safeguards should stop officials from using public resources for private gain?',
+      narrator: 'ike',
+      // [start time in seconds, caption]. Timed to the student recording; also used as the transcript.
+      cues: [
+        [0.0, 'Grab a notebook, reporter. Something smells like oil.'],
+        [4.9, 'Before the war, the government set aside oil fields as an emergency fuel supply for the Navy:'],
+        [10.1, 'one at Elk Hills in California, and one under a rock formation in Wyoming called Teapot Dome.'],
+        [16.9, 'In 1921, President Harding moved control of these reserves from the Navy to the Interior Department, run by Secretary Albert B. Fall.'],
+        [26.5, 'Fall then leased the reserves to two oilmen, Harry Sinclair and Edward Doheny, secretly and without competitive bidding.'],
+        [35.4, 'Around the same time, Fall suddenly had a lot of money.'],
+        [39.2, 'In April 1922, the Wall Street Journal reported the Teapot Dome lease, and the Senate opened an investigation.'],
+        [47.1, 'Senator Thomas Walsh asked the key question: how did Fall get rich so quickly?'],
+        [52.3, 'The answer included a $100,000 “loan” from Doheny.'],
+        [57.7, 'In 1929, Fall was convicted of accepting a bribe, the first former cabinet officer to go to prison.'],
+        [64.8, 'Here is the careful part.'],
+        [66.3, 'Harding died in 1923, before most of this came out, and there is no evidence he took oil bribes himself.'],
+        [72.5, 'Good reporting separates proof from rumor.'],
+        [75.6, 'So ask yourself: what safeguards should stop officials from using public resources for private gain?'],
       ],
     },
     r4: {
       num: 4, title: 'The Age of Calvin Coolidge', building: 'Treasury & Press Hall', short: 'Age of Coolidge', color: '#3a5a3a',
       question: 'Was quiet government good government?',
       objective: 'Compare the farm display with the stock ticker, then balance the budget.',
-      narration: [
-        'On August 3rd, 1923, Calvin Coolidge became president after Harding’s sudden death. He won a full term in 1924 and served until March 1929.',
-        'People called him “Silent Cal,” but he was not absent. He held more than five hundred press conferences and spoke on the radio regularly. He chose his words carefully, and his image was calm, honest, and thrifty.',
-        'Coolidge believed in a limited federal government. With Treasury Secretary Andrew Mellon, he cut income taxes several times, ran budget surpluses, and paid down the national debt.',
-        'Supporters credited these policies for the boom: cars, radios, electric appliances, and rising stock prices.',
-        'But prosperity was uneven. Farmers struggled with low crop prices all decade, and Coolidge twice vetoed the McNary-Haugen farm bills meant to help them. Many people also bought stocks and goods on credit.',
-        'The Great Depression began after Coolidge left office, and historians still debate how much the policies of the 1920s contributed. Growth and limited government defined this era, but prosperity did not reach every American equally.',
+      narrator: 'ashwin',
+      // [start time in seconds, caption]. Timed to the student recording; also used as the transcript.
+      cues: [
+        [0.8, 'After Harding’s death in 1923, Calvin Coolidge became president.'],
+        [5.0, 'Known as “Silent Cal,” he supported lower taxes, balanced budgets, and limited federal government.'],
+        [10.3, 'During his presidency, consumer goods like cars and radios became increasingly popular, and stock prices rose.'],
+        [16.4, 'Supporters credited his policies for economic growth.'],
+        [18.8, 'However, farmers continued struggling with low prices, and Coolidge vetoed bills designed to help them.'],
+        [23.9, 'The decade brought prosperity for many, but not everyone benefited equally.'],
+        [28.0, 'Was quiet government truly good?'],
       ],
     },
     r5: {
       num: 5, title: 'America and the World', building: 'Hall of Nations', short: 'America & the World', color: '#5a3a6a',
       question: 'Was America really turning inward?',
       objective: 'Follow the money on the great map, then rebuild the cycle at the map table.',
-      narration: [
-        'It is often said that after World War One, America turned its back on the world. The United States never joined the League of Nations; the Senate rejected the Treaty of Versailles in 1919.',
-        'But follow the money and the story gets more complicated.',
-        'During the war, the United States lent the Allies more than ten billion dollars, and Washington expected to be repaid. Meanwhile, Germany owed huge reparations to Britain and France.',
-        'In 1923, Germany fell behind on payments, France and Belgium occupied the Ruhr valley, and German money collapsed. In 1924, the Dawes Plan, led by the American banker Charles Dawes, reduced Germany’s payments and arranged a large international loan.',
-        'For about four years, American banks lent money to Germany, Germany paid reparations to the Allies, and the Allies paid their war debts back to the United States. It worked, as long as American loans kept flowing.',
-        'The United States also led the Washington Naval Conference to limit warships, and helped create the Kellogg-Briand Pact to renounce war, though neither could be enforced.',
-        'So normalcy did not mean America had no international responsibilities. It meant choosing which ones to accept.',
+      narrator: 'dyuti',
+      // [start time in seconds, caption]. Timed to the student recording; also used as the transcript.
+      cues: [
+        [1.0, 'Although America rejected membership in the League of Nations, it remained involved in international affairs.'],
+        [8.2, 'American banks helped stabilize Germany’s economy through the 1924 Dawes Plan, which reorganized reparations payments and arranged loans.'],
+        [17.8, 'These loans helped Germany pay Britain and France, which then repaid their American war debts.'],
+        [22.5, 'The United States also supported naval arms limitations and the Kellogg-Briand Pact, which renounced war.'],
+        [30.2, 'America had not completely turned inward.'],
+        [32.9, 'Instead, it chose which international responsibilities to accept.'],
       ],
     },
     r6: {
       num: 6, title: 'Normalcy for Whom?', building: 'Community Hall', short: 'Normalcy for Whom?', color: '#6a5a2a',
       question: 'Did everyone benefit from America’s return to normalcy?',
       objective: 'Read the displays with care, then meet the six people at the card table.',
-      narration: [
-        'So far we have looked at presidents, policies, and money. Now let’s ask a harder question: normalcy for whom?',
-        'In 1921 and again in 1924, Congress passed laws that sharply limited immigration. The 1924 law based its quotas on the 1890 census, which favored immigrants from northern and western Europe, cut visas for southern and eastern Europeans, and barred almost all immigration from Asia, including Japan.',
-        'Fear of radicals also shaped this era. Benjamin Gitlow was convicted in New York for publishing a socialist manifesto. In 1925 the Supreme Court upheld his conviction, but it also said free speech is protected from state governments, not just Congress. He lost, but the Constitution grew.',
-        'For many Black Americans, the twenties brought both new opportunities in Northern cities through the Great Migration and terrible violence, like the Tulsa Race Massacre of 1921. A federal anti-lynching bill passed the House in 1922 but died in the Senate.',
-        'Normalcy was a political ideal, not one shared experience.',
-        'So here is the question to carry into the courthouse: can a country truly return to normal if its definition of normal excludes or disadvantages some of its people?',
+      narrator: 'ashwin',
+      // [start time in seconds, caption]. Timed to the student recording; also used as the transcript.
+      cues: [
+        [0.7, 'Normalcy did not benefit everyone equally.'],
+        [4.0, 'Immigration laws in 1921 and 1924 sharply restricted newcomers, favoring northern and western Europeans while excluding almost all immigration from Asia.'],
+        [13.0, 'Black Americans found new opportunities during the Great Migration, but also faced racial violence, including the Tulsa Race Massacre.'],
+        [20.3, 'Meanwhile, a proposed federal anti-lynching bill failed in the Senate.'],
+        [24.1, 'These experiences revealed that normalcy meant different things to different Americans.'],
+        [29.1, 'Can a country truly return to normal if that normal excludes some of its people?'],
       ],
     },
     court: {
@@ -250,6 +283,20 @@
       question: 'Where does the evidence come from?',
       objective: 'Browse the card catalog, credits, scripts and music credits.',
     },
+  };
+
+  // The transcript for each exhibit is simply its captions, in order.
+  Object.values(ROOMS).forEach((r) => { if (r.cues) r.narration = r.cues.map((c) => c[1]); });
+
+  /* -------------------------------------------------------------------
+     7b. NARRATORS: the students who recorded each exhibit's narration,
+     drawn as pixel avatars in the costumes they wore for the video.
+     ------------------------------------------------------------------- */
+  const NARRATORS = {
+    nitya: { name: 'Nitya', costume: 'Wide-brimmed hat with a ribbon bow and a cable-knit sweater' },
+    ike: { name: 'Ike', costume: 'Bowler hat, patterned blazer, and a saxophone neck strap' },
+    ashwin: { name: 'Ashwin', costume: 'Navy quarter-zip over a white collared shirt and navy tie, with glasses' },
+    dyuti: { name: 'Dyuti', costume: 'Flapper headband with a jeweled brooch and a fuzzy sherpa jacket' },
   };
 
   /* -------------------------------------------------------------------
@@ -1339,7 +1386,7 @@
     hub: { title: 'Museum Hub: Town Square', text: 'You are at the center of the museum. Exhibits 1 to 3 line the north road, Exhibit 4 is to the east, Exhibits 5 and 6 are to the south, the Courthouse is in the southwest corner, and the Library is to the west. Press M to open the map.' },
   };
 
-  NF.CONTENT = { TEAM, MEDIA, MUSIC, ROOM_MUSIC, HELPDESK, BIG_QUESTIONS, SOURCES, ROOMS, ARTIFACTS, GAMES, EVIDENCE, VERDICTS, FOLLOWUPS, WRITTEN, RED_FLAGS, PEOPLE, SIGNS,
+  NF.CONTENT = { TEAM, MEDIA, MUSIC, NARRATORS, ROOM_MUSIC, HELPDESK, HELPDESK_CUES, BIG_QUESTIONS, SOURCES, ROOMS, ARTIFACTS, GAMES, EVIDENCE, VERDICTS, FOLLOWUPS, WRITTEN, RED_FLAGS, PEOPLE, SIGNS,
     title: 'THE NORMALCY FILES', subtitle: 'A journey through America’s search for stability after World War I',
     centralQuestion: 'Did America’s return to normalcy restore stability after World War I, or did it conceal deeper problems in American government and society?' };
   NF.src = function (id) { return SOURCES.find((s) => s.id === id); };

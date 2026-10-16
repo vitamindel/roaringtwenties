@@ -33,15 +33,25 @@
     </header>
 
     <div id="prompt" class="prompt" hidden></div>
-    <div id="captions" class="captions" aria-live="polite" hidden></div>
+    <div id="captions" class="captions" aria-live="polite" hidden>
+      <canvas id="cap-avatar" class="cap-avatar" width="44" height="48" aria-hidden="true"></canvas>
+      <div class="cap-body"><b id="cap-name" class="cap-name"></b><span id="cap-text"></span></div>
+    </div>
 
     <!-- ===== Narration panel ===== -->
     <section id="narr" class="narr" hidden aria-label="Room narration player">
       <div class="narr-head">
-        <span class="narr-kicker">Room Narration</span>
+        <span class="narr-kicker">Room narration</span>
         <button class="x-btn" id="narr-close" aria-label="Close narration panel">×</button>
       </div>
-      <div class="narr-title" id="narr-title"></div>
+      <div class="narr-who">
+        <canvas id="narr-avatar" class="narr-avatar" width="44" height="48" aria-hidden="true"></canvas>
+        <div>
+          <div class="narr-by">Narrated by <b id="narr-name"></b></div>
+          <div class="narr-costume" id="narr-costume"></div>
+          <div class="narr-title" id="narr-title"></div>
+        </div>
+      </div>
       <div class="narr-mode" id="narr-mode"></div>
       <div class="narr-row">
         <button class="deco-btn small" id="narr-play" aria-label="Play or pause">▶ Play</button>
@@ -51,9 +61,10 @@
       </div>
       <div class="narr-row">
         <label class="narr-vol">Voice <input type="range" id="narr-vol" min="0" max="1" step="0.05" value="1"></label>
-        <button class="deco-btn small ghost" id="narr-cc" aria-pressed="true">CC</button>
-        <button class="deco-btn small ghost" id="narr-transcript">Transcript</button>
+        <button class="deco-btn small ghost" id="narr-cc" aria-pressed="true">Captions</button>
+        <button class="deco-btn small ghost" id="narr-transcript">Full transcript</button>
       </div>
+      <ol class="narr-lines" id="narr-lines" aria-label="Live transcript"></ol>
     </section>
 
     <!-- ===== Touch controls ===== -->

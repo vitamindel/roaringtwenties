@@ -13,7 +13,7 @@
 
   const Audio = (NF.Audio = {
     ctx: null, ready: false, amb: null,
-    vol: { music: 0.4, sfx: 0.7, ambience: 0.45, voice: 1 },
+    vol: { music: 0.3, sfx: 0.6, ambience: 0.25, voice: 1 },
     musicOn: true, duck: 1, trackKey: null, el: null,
 
     init() {
@@ -40,7 +40,7 @@
         } catch (e) { this.ready = false; }
       }
       this.applyVolumes();
-      if (this.pendingScene) { const p = this.pendingScene; this.pendingScene = null; this.setScene(p[0], p[1]); }
+      if (this.pendingScene && NF.Game && NF.Game.running) { const p = this.pendingScene; this.pendingScene = null; this.setScene(p[0], p[1]); }
     },
     applyVolumes() {
       if (this.ready) {
@@ -50,7 +50,7 @@
       }
       if (this.el && !this.fading) this.el.volume = this.musicTarget();
     },
-    musicTarget() { return this.musicOn ? Math.max(0, Math.min(1, this.vol.music * 0.7 * this.duck)) : 0; },
+    musicTarget() { return this.musicOn ? Math.max(0, Math.min(1, this.vol.music * 0.55 * this.duck)) : 0; },
     setVolume(k, v) {
       this.vol[k] = v; NF.Save.data.settings[k] = v; NF.Save.save(); this.applyVolumes();
       if (k === 'voice' && NF.UI) NF.UI.setVoiceVolume(v);
@@ -72,7 +72,7 @@
 
     /* ---------------- scene changes ---------------- */
     setScene(mapId, ambience) {
-      if (!this.unlocked) { this.pendingScene = [mapId, ambience]; return; }
+      if (!this.unlocked || !(NF.Game && NF.Game.running)) { this.pendingScene = [mapId, ambience]; return; }
       const key = (NF.CONTENT.ROOM_MUSIC || {})[mapId] || 'hub';
       this.wantKey = key;
       if (this.musicOn && key !== this.trackKey) this.playTrack(key);
@@ -94,6 +94,12 @@
         el.play().then(() => this.fadeTo(el, this.musicTarget(), 1200)).catch(() => { /* autoplay blocked or file missing: stay silent */ });
       };
       if (this.el) this.stopTrack(start); else start();
+    },
+    // Silence everything except the help-desk video (used by the title screen)
+    quiet() {
+      this.stopTrack();
+      if (this.amb) { this.amb.stop(); this.amb = null; }
+      this.ambName = null;
     },
     stopTrack(after) {
       const el = this.el;

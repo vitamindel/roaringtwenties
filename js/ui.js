@@ -60,7 +60,7 @@
       this.updateHud();
       this.setPrompt(null);
       this.stopNarration();
-      $('#narr').hidden = true; $('#btn-narr').classList.remove('active');
+      $('#narr').hidden = true; document.body.classList.remove('narr-open'); $('#btn-narr').classList.remove('active');
       $('#btn-narr').style.opacity = room && room.narration ? 1 : 0.5;
     },
     updateHud() {
@@ -145,6 +145,7 @@
       clearTimeout(this._tc);
       this._tc = setTimeout(() => { tc.hidden = true; }, 3600);
       if (first) { this.toast(r.num <= 6 ? `Exhibit ${r.num} visited` : `${r.building} visited`, 'New room', '◆'); NF.Audio.sfx('discover'); }
+      this.autoNarrate(roomId);
       this.updateHud();
     },
 
@@ -261,14 +262,18 @@
       o.build(box, set);
     },
 
-    /* ---------- narration ---------- */
+    /* ---------- narration ----------
+       Plays the student recording for the room. The narrator's pixel avatar
+       "talks" while they speak, and captions plus a live transcript appear
+       automatically, timed to the recording (cues in content.js). */
     initNarration() {
-      this.narr = { audio: new Audio(), mode: null, idx: 0, playing: false, room: null };
+      this.narr = { audio: new Audio(), mode: null, idx: -1, playing: false, room: null, cues: [] };
+      this.ccOn = true; // captions start on every visit, so nobody has to turn them on
       const a = this.narr.audio;
-      a.preload = 'none';
+      a.preload = 'auto';
       a.addEventListener('timeupdate', () => this.narrTick());
-      a.addEventListener('ended', () => { this.narr.playing = false; this.narrUi(); this.showCaption(null); NF.Audio.setDuck(false); });
-      $('#narr-close').onclick = () => { this.stopNarration(); $('#narr').hidden = true; $('#btn-narr').classList.remove('active'); };
+      a.addEventListener('ended', () => { this.narr.playing = false; this.narrUi(); this.showCaption(null); NF.Audio.setDuck(false); this.markLine(-1); });
+      $('#narr-close').onclick = () => { this.stopNarration(); $('#narr').hidden = true; document.body.classList.remove('narr-open'); $('#btn-narr').classList.remove('active'); };
       $('#narr-play').onclick = () => this.narrToggle();
       $('#narr-replay').onclick = () => this.narrPlay(true);
       $('#narr-transcript').onclick = () => this.openTranscript(this.narr.room);
@@ -277,39 +282,72 @@
       vol.oninput = () => NF.Audio.setVolume('voice', +vol.value);
       a.volume = NF.Audio.vol.voice;
       const cc = $('#narr-cc');
-      cc.setAttribute('aria-pressed', String(this.settings().cc !== false));
-      cc.onclick = () => { const s = this.settings(); s.cc = !(s.cc !== false); NF.Save.save(); cc.setAttribute('aria-pressed', String(s.cc)); if (!s.cc) this.showCaption(null); };
+      cc.setAttribute('aria-pressed', 'true');
+      cc.onclick = () => { this.ccOn = !this.ccOn; cc.setAttribute('aria-pressed', String(this.ccOn)); if (!this.ccOn) this.showCaption(null); else this.narrTick(true); };
       $('#narr-progress').onclick = (e) => {
         const r = e.currentTarget.getBoundingClientRect(), f = (e.clientX - r.left) / r.width;
         if (this.narr.mode === 'audio' && a.duration) a.currentTime = f * a.duration;
         else if (this.narr.mode === 'tts') { this.narr.idx = Math.floor(f * this.narr.lines.length); this.ttsSpeak(); }
       };
+      this.avatarLoop();
     },
     setVoiceVolume(v) { this.narr.audio.volume = v; const vol = $('#narr-vol'); if (vol) vol.value = v; },
+    openNarrPanel() {
+      $('#narr').hidden = false;
+      document.body.classList.add('narr-open');
+      $('#btn-narr').classList.add('active');
+    },
     toggleNarration() {
       const id = NF.Game.map.id, room = this.C.ROOMS[id];
       const panel = $('#narr');
       if (!room || !room.narration) { this.toast('Narration plays inside each of the six exhibits.', 'Narration', '♪'); return; }
-      if (!panel.hidden && this.narr.room === id) { panel.hidden = true; this.stopNarration(); $('#btn-narr').classList.remove('active'); return; }
-      panel.hidden = false;
-      $('#btn-narr').classList.add('active');
+      if (!panel.hidden && this.narr.room === id) { panel.hidden = true; document.body.classList.remove('narr-open'); this.stopNarration(); $('#btn-narr').classList.remove('active'); return; }
+      this.openNarrPanel();
       this.loadNarration(id);
       this.narrPlay(true);
+    },
+    // Called when a visitor walks into an exhibit: the narration starts by itself (once per visit to the site)
+    autoNarrate(id) {
+      const room = this.C.ROOMS[id];
+      if (!room || !room.narration || this.settings().autoNarr === false) return;
+      this._autoDone = this._autoDone || {};
+      if (this._autoDone[id]) return;
+      this._autoDone[id] = true;
+      clearTimeout(this._autoT);
+      this._autoT = setTimeout(() => {
+        if (NF.Game.map.id !== id || this.narr.playing) return;
+        this.openNarrPanel();
+        this.loadNarration(id);
+        this.narrPlay(true);
+      }, 1400);
     },
     loadNarration(id) {
       const N = this.narr, room = this.C.ROOMS[id];
       this.stopNarration();
-      N.room = id; N.lines = room.narration; N.idx = 0;
+      N.room = id; N.lines = room.narration; N.cues = room.cues || room.narration.map((l, i) => [i, l]); N.idx = -1;
+      const who = this.C.NARRATORS[room.narrator] || null;
+      N.who = who; N.whoKey = room.narrator;
+      $('#narr-name').textContent = who ? who.name : 'the museum team';
+      $('#narr-costume').textContent = who ? 'In costume: ' + who.costume.toLowerCase() + '.' : '';
       $('#narr-title').textContent = `Exhibit ${room.num}: ${room.title}`;
+      $('#cap-name').textContent = who ? who.name + ':' : '';
+      this.drawAvatars(0, false);
+      const list = $('#narr-lines');
+      list.innerHTML = '';
+      N.cues.forEach(([t, text], i) => {
+        const li = h('li', { 'data-i': i, title: 'Play from here' }, text);
+        li.onclick = () => { if (N.mode === 'audio') { N.audio.currentTime = t + 0.01; if (!N.playing) this.narrPlay(false); } else if (N.mode === 'tts') { N.idx = i; this.ttsSpeak(); } };
+        list.append(li);
+      });
       N.mode = 'probe';
-      $('#narr-mode').textContent = 'Loading the student recording…';
+      $('#narr-mode').textContent = 'Loading the recording…';
       N.audio.src = this.C.MEDIA.narration[id];
       N.audio.onerror = () => {
         N.mode = 'tts';
-        $('#narr-mode').textContent = ('speechSynthesis' in window) ? 'Student recording not added yet, so a computer voice reads the script. Captions and the transcript are always available.' : 'Student recording not added yet. Use the captions or the transcript.';
+        $('#narr-mode').textContent = ('speechSynthesis' in window) ? 'Recording not found, so a computer voice reads the script.' : 'Recording not found. Read the transcript below.';
         if (N.wantPlay) this.ttsSpeak();
       };
-      N.audio.oncanplay = () => { if (N.mode === 'probe') { N.mode = 'audio'; $('#narr-mode').textContent = 'Student recording'; if (N.wantPlay) this.narrPlay(); } };
+      N.audio.oncanplay = () => { if (N.mode === 'probe') { N.mode = 'audio'; $('#narr-mode').textContent = ''; if (N.wantPlay) this.narrPlay(); } };
       N.audio.load();
     },
     narrPlay(restart) {
@@ -317,7 +355,7 @@
       if (!N.room) return;
       N.wantPlay = true;
       NF.Audio.setDuck(true);
-      if (N.mode === 'audio') { if (restart) N.audio.currentTime = 0; N.audio.play().catch(() => {}); N.playing = true; }
+      if (N.mode === 'audio') { if (restart) N.audio.currentTime = 0; N.audio.play().then(() => { N.playing = true; this.narrUi(); }).catch(() => { N.playing = false; this.narrUi(); }); N.playing = true; }
       else if (N.mode === 'tts') { if (restart) N.idx = 0; this.ttsSpeak(); }
       else { N.playing = true; }
       this.narrUi();
@@ -335,6 +373,7 @@
     stopNarration() {
       const N = this.narr;
       if (!N) return;
+      clearTimeout(this._autoT);
       N.playing = false; N.wantPlay = false;
       try { N.audio.pause(); } catch (e) { /* ignore */ }
       if (window.speechSynthesis) speechSynthesis.cancel();
@@ -347,30 +386,77 @@
       if (!window.speechSynthesis) { N.playing = false; this.narrUi(); return; }
       speechSynthesis.cancel();
       N.playing = true;
+      if (N.idx < 0) N.idx = 0;
       const token = (N.token = (N.token || 0) + 1);
       const speakOne = () => {
         if (token !== N.token || !N.playing) return;
-        if (N.idx >= N.lines.length) { N.playing = false; N.idx = 0; this.showCaption(null); this.narrUi(); NF.Audio.setDuck(false); return; }
+        if (N.idx >= N.lines.length) { N.playing = false; N.idx = -1; N.ttsTalking = false; this.showCaption(null); this.markLine(-1); this.narrUi(); NF.Audio.setDuck(false); return; }
         const u = new SpeechSynthesisUtterance(N.lines[N.idx]);
         u.rate = 0.98; u.pitch = 1.02; u.volume = NF.Audio.vol.voice;
         const v = speechSynthesis.getVoices().find((x) => /en[-_]US/i.test(x.lang) && /Natural|Aria|Jenny|Google/i.test(x.name)) || speechSynthesis.getVoices().find((x) => /^en/i.test(x.lang));
         if (v) u.voice = v;
-        this.showCaption(N.lines[N.idx]);
+        this.showCaption(N.lines[N.idx]); this.markLine(N.idx);
+        N.ttsTalking = true;
         this.narrUi();
-        u.onend = () => { if (token !== N.token) return; N.idx++; speakOne(); };
-        u.onerror = () => { if (token !== N.token) return; N.idx++; setTimeout(speakOne, 50); };
+        u.onend = () => { if (token !== N.token) return; N.ttsTalking = false; N.idx++; speakOne(); };
+        u.onerror = () => { if (token !== N.token) return; N.ttsTalking = false; N.idx++; setTimeout(speakOne, 50); };
         speechSynthesis.speak(u);
       };
       speakOne();
     },
-    narrTick() {
+    // Which caption is on screen right now, from the recording's timestamps
+    narrTick(force) {
       const N = this.narr, a = N.audio;
-      if (N.mode !== 'audio' || !a.duration) return;
-      const total = N.lines.reduce((s, l) => s + l.length, 0);
-      let acc = 0, idx = 0; const f = a.currentTime / a.duration;
-      for (let i = 0; i < N.lines.length; i++) { acc += N.lines[i].length / total; idx = i; if (f <= acc) break; }
-      if (N.playing) this.showCaption(N.lines[idx]);
+      if (N.mode !== 'audio' || !N.cues.length) { this.narrUi(); return; }
+      let idx = -1;
+      for (let i = 0; i < N.cues.length; i++) if (a.currentTime + 0.05 >= N.cues[i][0]) idx = i;
+      if (idx !== N.idx || force) {
+        N.idx = idx;
+        this.markLine(idx);
+        if (N.playing || force) this.showCaption(idx >= 0 ? N.cues[idx][1] : null);
+      }
       this.narrUi();
+    },
+    // Is the narrator speaking at this instant? (used to move the avatar's mouth)
+    isTalking() {
+      const N = this.narr;
+      if (!N || !N.playing) return false;
+      if (N.mode === 'tts') return !!N.ttsTalking;
+      if (N.mode !== 'audio' || N.idx < 0) return false;
+      const t = N.audio.currentTime, next = N.cues[N.idx + 1];
+      const end = next ? next[0] - 0.35 : (N.audio.duration || 0) - 0.3;
+      return t < end;
+    },
+    markLine(idx) {
+      const list = $('#narr-lines');
+      if (!list) return;
+      [...list.children].forEach((li, i) => li.classList.toggle('now', i === idx));
+      const cur = list.children[idx];
+      if (cur) { const top = cur.offsetTop - list.offsetTop - 8; list.scrollTo({ top, behavior: this.settings().reduceMotion ? 'auto' : 'smooth' }); }
+    },
+    drawAvatars(mouth, blink) {
+      const key = this.narr && this.narr.whoKey;
+      if (!key) return;
+      this._busts = this._busts || {};
+      const id = key + mouth + (blink ? 'b' : '');
+      if (!this._busts[id]) this._busts[id] = NF.Art.narratorBust(key, mouth, blink);
+      ['#narr-avatar', '#cap-avatar'].forEach((sel) => { const c = $(sel); if (!c) return; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, c.width, c.height); g.drawImage(this._busts[id], 0, 0); });
+    },
+    avatarLoop() {
+      let last = 0, mouth = 0, nextBlink = performance.now() + 3000, blinkUntil = 0, prev = '';
+      const step = (now) => {
+        requestAnimationFrame(step);
+        if (now - last < 110) return;
+        last = now;
+        const talking = this.isTalking();
+        mouth = talking && !this.settings().reduceMotion ? (mouth ? 0 : (Math.random() < 0.8 ? 1 : 0)) : 0;
+        if (now > nextBlink) { blinkUntil = now + 140; nextBlink = now + 2500 + Math.random() * 3000; }
+        const blink = now < blinkUntil;
+        const state = mouth + (blink ? 'b' : '') + (this.narr && this.narr.whoKey);
+        if (state !== prev) { prev = state; this.drawAvatars(mouth, blink); }
+        $('#narr').classList.toggle('talking', talking);
+      };
+      requestAnimationFrame(step);
     },
     narrUi() {
       const N = this.narr;
@@ -378,19 +464,22 @@
       $('#narr-play').textContent = N.playing ? '❚❚ Pause' : '▶ Play';
       let f = 0, t = '0:00';
       if (N.mode === 'audio' && N.audio.duration) { f = N.audio.currentTime / N.audio.duration; const s = Math.floor(N.audio.currentTime); t = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
-      else if (N.mode === 'tts' && N.lines) { f = N.idx / N.lines.length; t = `${Math.min(N.idx + 1, N.lines.length)}/${N.lines.length}`; }
+      else if (N.mode === 'tts' && N.lines) { f = Math.max(0, N.idx) / N.lines.length; t = `${Math.min(Math.max(0, N.idx) + 1, N.lines.length)}/${N.lines.length}`; }
       $('#narr-fill').style.width = (f * 100).toFixed(1) + '%';
       $('#narr-time').textContent = t;
     },
     showCaption(text) {
       const el = $('#captions');
-      if (!text || this.settings().cc === false) { el.hidden = true; return; }
-      el.textContent = text; el.hidden = false;
+      if (!text || !this.ccOn) { el.hidden = true; return; }
+      $('#cap-text').textContent = text;
+      el.classList.toggle('no-avatar', !(this.narr && this.narr.whoKey));
+      el.hidden = false;
     },
     openTranscript(id) {
       const room = this.C.ROOMS[id];
       if (!room) return;
-      const body = h('div.prose', h('p.muted', 'Full narration transcript: the text version of this room’s audio.'), room.narration.map((l) => h('p', l)));
+      const who = this.C.NARRATORS[room.narrator];
+      const body = h('div.prose', h('p.muted', (who ? `Narrated by ${who.name}. ` : '') + 'The full text of this room’s narration.'), room.narration.map((l) => h('p', l)));
       this.modal({ kicker: `Exhibit ${room.num} transcript`, title: room.title, body, cls: 'narrow paper' });
     },
 
@@ -493,7 +582,8 @@
         music ? h('p.muted', 'Now playing here: “' + music.title + ',” ' + music.artist + ', ' + music.year + '. Public domain recording.') : null,
         h('h3', 'Display and accessibility'),
         h('div.set-grid',
-          toggle('Captions for narration', sv('cc', true), (v) => { s.cc = v; $('#narr-cc').setAttribute('aria-pressed', String(v)); if (!v) this.showCaption(null); }),
+          toggle('Captions for narration', () => this.ccOn, (v) => { this.ccOn = v; $('#narr-cc').setAttribute('aria-pressed', String(v)); if (!v) this.showCaption(null); }),
+          toggle('Play narration when entering an exhibit', sv('autoNarr', true), (v) => { s.autoNarr = v; }),
           toggle('Gold guide arrow', sv('guide', true), (v) => { s.guide = v; }),
           toggle('Evening lighting', sv('lights', true), (v) => { s.lights = v; }),
           toggle('Reduce motion', sv('reduceMotion', false), (v) => { s.reduceMotion = v; }),
@@ -638,7 +728,7 @@
     showGameUi(on) {
       $('#hud').hidden = !on;
       $('#touch').hidden = !(on && this.touchEnabled);
-      if (!on) { $('#prompt').hidden = true; $('#narr').hidden = true; this.stopNarration(); }
+      if (!on) { $('#prompt').hidden = true; $('#narr').hidden = true; document.body.classList.remove('narr-open'); this.stopNarration(); }
     },
   });
 
@@ -715,12 +805,11 @@
     videoCaptions() {
       // fallback captions when the VTT file could not be loaded (e.g. opened from file://)
       if (this.trackOk || $('#video-cc').getAttribute('aria-pressed') !== 'true') return;
-      const v = this.video, lines = NF.CONTENT.HELPDESK;
-      if (!v.duration) return;
-      const total = lines.reduce((s, l) => s + l.length, 0);
-      let acc = 0, idx = lines.length - 1;
-      for (let i = 0; i < lines.length; i++) { acc += lines[i].length / total; if (v.currentTime / v.duration <= acc) { idx = i; break; } }
-      const cap = $('#video-captions'); cap.textContent = lines[idx]; cap.hidden = v.paused;
+      const v = this.video, t = v.currentTime;
+      const cue = NF.CONTENT.HELPDESK_CUES.find((c) => t >= c[0] && t < c[1]);
+      const cap = $('#video-captions');
+      if (cue && cap.textContent !== cue[2]) cap.textContent = cue[2];
+      cap.hidden = v.paused || !cue;
     },
     drawProjector(step) {
       const c = $('#projector'); if (!c) return;
@@ -754,7 +843,7 @@
     },
     show() {
       UI.closeAll();
-      if (NF.Audio) NF.Audio.stopTrack();
+      if (NF.Audio) NF.Audio.quiet();
       NF.Game.running = false;
       UI.showGameUi(false);
       this.el.hidden = false;

@@ -1623,6 +1623,102 @@
     return c;
   };
 
+  /* ---------- narrator avatars: pixel busts of the students in costume ----------
+     mouth: 0 closed, 1 open; blink: eyes shut. Returns a 44x48 canvas. */
+  A.narratorBust = function (key, mouth, blink) {
+    const c = canvas(44, 48);
+    const g = c.g;
+    const L = {
+      nitya: { skin: '#e0b28c', hair: '#1c1516' },
+      ike: { skin: '#6e4632', hair: '#140f0e' },
+      ashwin: { skin: '#a8714c', hair: '#1a1310' },
+      dyuti: { skin: '#c08a63', hair: '#1d1517' },
+    }[key] || { skin: '#d8a882', hair: '#2a1a14' };
+    const skin = L.skin, skinD = shade(skin, -0.16), skinL = shade(skin, 0.12), hair = L.hair, hairL = shade(hair, 0.18);
+    const face = () => {
+      R(g, 17, 31, 10, 6, skinD); // neck
+      ellipse(g, 22, 22, 9, 10, skin);
+      R(g, 12, 21, 2, 4, skin); R(g, 30, 21, 2, 4, skin); P(g, 12, 22, skinD); P(g, 31, 22, skinD);
+      R(g, 29, 15, 1, 12, skinD); R(g, 15, 15, 1, 8, skinL);
+      if (blink) { R(g, 17, 23, 3, 1, '#1a1214'); R(g, 25, 23, 3, 1, '#1a1214'); }
+      else { R(g, 17, 22, 3, 2, '#1a1214'); R(g, 25, 22, 3, 2, '#1a1214'); P(g, 17, 22, '#f6f2ea'); P(g, 25, 22, '#f6f2ea'); }
+      R(g, 16, 19, 4, 1, shade(hair, 0.1)); R(g, 25, 19, 4, 1, shade(hair, 0.1));
+      R(g, 21, 25, 2, 1, skinD); P(g, 22, 24, skinD);
+      P(g, 16, 26, mix(skin, '#e07a6a', 0.35)); P(g, 28, 26, mix(skin, '#e07a6a', 0.35));
+      if (mouth) { R(g, 20, 28, 5, 2, '#4a1c1c'); R(g, 21, 28, 3, 1, '#f4f0e8'); }
+      else { P(g, 20, 28, '#7a3a34'); R(g, 21, 29, 3, 1, '#7a3a34'); P(g, 24, 28, '#7a3a34'); }
+    };
+    if (key === 'nitya') {
+      R(g, 11, 14, 22, 26, hair); // long hair behind
+      const sw = '#ece2cc', swD = '#cdbf9f';
+      R(g, 4, 38, 36, 10, sw); R(g, 7, 36, 30, 2, sw); R(g, 4, 38, 2, 10, swD); R(g, 38, 38, 2, 10, swD);
+      [9, 15, 28, 34].forEach((x) => { for (let y = 37; y < 48; y += 2) { P(g, x, y, swD); P(g, x + 1, y + 1, swD); } });
+      for (let y = 38; y < 48; y += 3) R(g, 20, y, 4, 1, swD);
+      face();
+      R(g, 17, 36, 10, 2, swD);
+      R(g, 13, 12, 18, 5, hair); R(g, 12, 15, 3, 15, hair); R(g, 29, 15, 3, 15, hair); P(g, 14, 13, hairL);
+      R(g, 10, 30, 5, 15, hair); R(g, 29, 30, 5, 15, hair); R(g, 11, 31, 1, 12, hairL);
+      const hat = '#2a2026';
+      R(g, 13, 3, 18, 10, hat); g.clearRect(13, 3, 1, 1); g.clearRect(30, 3, 1, 1); R(g, 14, 4, 4, 7, shade(hat, 0.15));
+      ellipse(g, 22, 13, 17, 3, hat); R(g, 7, 13, 30, 1, shade(hat, 0.18));
+      const rib = '#efe5d2';
+      R(g, 13, 9, 18, 2, rib);
+      R(g, 26, 7, 3, 3, rib); R(g, 31, 7, 3, 3, rib); R(g, 29, 8, 2, 2, '#c8bca4'); R(g, 28, 10, 1, 3, rib); R(g, 31, 10, 1, 3, rib);
+    } else if (key === 'ike') {
+      const bz = '#8b6a3c', grid = '#4a3420';
+      R(g, 4, 38, 36, 10, bz); R(g, 7, 36, 30, 2, bz);
+      for (let x = 5; x < 40; x += 6) R(g, x, 37, 1, 11, grid);
+      for (let y = 41; y < 48; y += 6) R(g, 4, y, 36, 1, grid);
+      for (let x = 8; x < 40; x += 6) for (let y = 38; y < 48; y += 6) { P(g, x, y + 1, '#c8402e'); P(g, x - 1, y + 1, '#e8c060'); P(g, x + 1, y + 1, '#e8c060'); P(g, x, y, '#e8c060'); P(g, x, y + 2, '#e8c060'); }
+      for (let y = 36; y < 48; y++) { const half = Math.max(0, Math.round(4 - (y - 36) * 0.35)); R(g, 22 - half - 1, y, half * 2 + 2, 1, '#1c1c22'); }
+      for (let i = 0; i < 11; i++) { P(g, 17 - Math.round(i * 0.6), 36 + i, '#efdfb0'); P(g, 27 + Math.round(i * 0.6), 36 + i, '#efdfb0'); }
+      face();
+      R(g, 18, 35, 8, 2, '#1c1c22');
+      for (let i = 0; i < 9; i++) { P(g, 18 + Math.round(i * 0.45), 35 + i, '#2a2a2a'); P(g, 26 - Math.round(i * 0.45), 35 + i, '#2a2a2a'); }
+      R(g, 21, 44, 3, 2, '#d8b05a'); P(g, 22, 46, '#a8803a');
+      R(g, 13, 16, 2, 7, hair); R(g, 29, 16, 2, 7, hair); R(g, 14, 14, 16, 3, hair);
+      const hat = '#1b1a1e';
+      ellipse(g, 22, 9, 9, 6, hat); R(g, 13, 9, 18, 4, hat); R(g, 15, 5, 3, 5, '#34333a');
+      R(g, 13, 11, 18, 2, '#4c4c58'); R(g, 15, 11, 6, 1, '#a8a8b8');
+      ellipse(g, 22, 14, 13, 2, '#141316'); R(g, 10, 14, 6, 1, '#2e2d34');
+    } else if (key === 'ashwin') {
+      const nv = '#1f2a46', nvD = '#162038';
+      R(g, 4, 38, 36, 10, nv); R(g, 7, 36, 30, 2, nv); R(g, 36, 38, 4, 10, nvD); R(g, 4, 38, 3, 10, shade(nv, 0.12));
+      for (let y = 34; y < 42; y++) { const half = Math.round((41 - y) * 0.55) + 1; R(g, 22 - half, y, half * 2, 1, '#f4f4f0'); }
+      R(g, 18, 34, 3, 2, '#ffffff'); R(g, 23, 34, 3, 2, '#ffffff'); R(g, 21, 35, 2, 2, '#141c33'); R(g, 21, 37, 2, 5, '#141c33'); P(g, 21, 37, '#26304e');
+      R(g, 14, 34, 5, 4, nvD); R(g, 25, 34, 5, 4, nvD); R(g, 14, 34, 5, 1, shade(nv, 0.15)); R(g, 25, 34, 5, 1, shade(nv, 0.15));
+      R(g, 22, 42, 1, 6, '#8a8a96'); R(g, 21, 42, 3, 2, '#d0d0d8');
+      face();
+      R(g, 13, 9, 18, 8, hair); R(g, 12, 11, 20, 5, hair); g.clearRect(12, 11, 1, 1); g.clearRect(31, 11, 1, 1);
+      R(g, 12, 15, 3, 6, hair); R(g, 29, 15, 3, 5, hair);
+      [[13, 16, 5, 3], [17, 17, 5, 3], [22, 16, 4, 3], [25, 17, 5, 2]].forEach(([x, y, w, hh]) => { R(g, x, y, w, hh, hair); });
+      P(g, 16, 19, hair); P(g, 21, 20, hair); P(g, 24, 19, hair);
+      R(g, 15, 12, 4, 1, hairL); R(g, 20, 13, 4, 1, hairL); R(g, 25, 12, 3, 1, hairL); R(g, 17, 16, 3, 1, hairL); R(g, 23, 17, 2, 1, hairL);
+      R(g, 15, 21, 6, 1, '#151515'); R(g, 23, 21, 6, 1, '#151515'); R(g, 21, 22, 2, 1, '#151515');
+      R(g, 15, 22, 1, 3, '#7a7a80'); R(g, 20, 22, 1, 3, '#7a7a80'); R(g, 23, 22, 1, 3, '#7a7a80'); R(g, 28, 22, 1, 3, '#7a7a80');
+      R(g, 15, 25, 6, 1, '#9a9aa0'); R(g, 23, 25, 6, 1, '#9a9aa0'); R(g, 13, 22, 2, 1, '#151515'); R(g, 29, 22, 2, 1, '#151515');
+      P(g, 19, 22, 'rgba(255,255,255,0.7)'); P(g, 27, 22, 'rgba(255,255,255,0.7)');
+    } else if (key === 'dyuti') {
+      R(g, 11, 14, 22, 24, hair);
+      const jk = '#f1ece3', top = '#24212c';
+      R(g, 3, 39, 38, 9, jk); R(g, 6, 37, 8, 2, jk); R(g, 30, 37, 8, 2, jk);
+      const rr = RNG(7);
+      for (let i = 0; i < 70; i++) { const x = 3 + ((rr() * 38) | 0), y = 37 + ((rr() * 11) | 0); if (x < 16 || x > 28) P(g, x, y, rr() < 0.5 ? '#d9d2c4' : '#fdfbf6'); }
+      R(g, 16, 35, 12, 13, top);
+      face();
+      R(g, 17, 34, 10, 3, top); R(g, 17, 34, 10, 1, shade(top, 0.25));
+      R(g, 13, 12, 18, 5, hair); P(g, 22, 12, shade(hair, 0.3)); R(g, 12, 16, 3, 14, hair); R(g, 29, 16, 3, 14, hair); P(g, 15, 13, hairL);
+      R(g, 13, 15, 18, 2, '#211b2a'); R(g, 13, 15, 18, 1, '#3a3346');
+      R(g, 26, 13, 4, 4, '#e2b85a'); R(g, 27, 14, 2, 2, '#7ad6f0'); P(g, 30, 12, '#fffbe0'); P(g, 25, 13, '#fffbe0');
+      disc(g, 30, 37, 3, '#7c7a78'); for (let i = 0; i < 10; i++) P(g, 27 + ((rr() * 7) | 0), 34 + ((rr() * 7) | 0), rr() < 0.5 ? '#a09e9a' : '#5e5c5a');
+      R(g, 28, 40, 5, 3, skin); R(g, 28, 40, 5, 1, skinL);
+    } else {
+      R(g, 4, 38, 36, 10, '#5a4a3a'); face();
+    }
+    outline(c);
+    return c;
+  };
+
   // A big wooden direction board for the town square
   A.hubSign = function () {
     const c = canvas(78, 40);
