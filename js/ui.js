@@ -34,6 +34,7 @@
       $('#btn-map').onclick = () => this.openMap();
       $('#btn-narr').onclick = () => this.toggleNarration();
       $('#btn-help').onclick = () => this.openHelp();
+      $('#btn-effacts').onclick = () => this.openEffacts();
       $('#btn-pause').onclick = () => this.openPause();
       $('#prompt').onclick = () => { const g = NF.Game; if (g.near && !g.paused) g.activate(g.near); };
       const pc = $('#hud-portrait'); const pg = pc.getContext('2d'); pg.imageSmoothingEnabled = false; pg.drawImage(NF.Art.portrait(NF.LOOKS.player), 0, 0);
@@ -115,7 +116,8 @@
         case 'biblio': verb = 'open'; label = 'the bibliography'; break;
         case 'credits': verb = 'read'; label = 'the team credits'; break;
         case 'replay': verb = 'play'; label = 'the help-desk introduction'; break;
-        case 'eqboard': verb = 'read'; label = 'the two big questions'; break;
+        case 'eqboard': verb = 'read'; label = 'the essential questions'; break;
+        case 'effacts': verb = 'read'; label = 'the WWI Effacts'; break;
         case 'scripts': verb = 'read'; label = 'narration scripts and music credits'; break;
       }
       el.innerHTML = '';
@@ -191,7 +193,8 @@
         case 'biblio': this.openBibliography(); break;
         case 'credits': this.openCredits(); break;
         case 'replay': NF.Title.show(true); break;
-        case 'eqboard': this.openBigQuestions(); break;
+        case 'eqboard': this.openEssentialQuestions(); break;
+        case 'effacts': this.openEffacts(); break;
         case 'scripts': this.openScripts(); break;
       }
     },
@@ -573,6 +576,7 @@
           h('button.deco-btn', { onclick: () => this.closeTop() }, '▶ Resume'),
           h('button.deco-btn.ghost', { onclick: () => { this.closeTop(); this.openMap(); } }, 'Map and room directory'),
           h('button.deco-btn.ghost', { onclick: () => { this.closeTop(); this.openHelp(); } }, 'Controls and help'),
+          h('button.deco-btn.ghost', { onclick: () => { this.closeTop(); this.openEffacts(); } }, 'WWI Effacts'),
           h('button.deco-btn.ghost', { onclick: () => { this.closeAll(); NF.Title.show(true); } }, 'Replay the introduction video'),
           NF.Game.map.id !== 'town' ? h('button.deco-btn.ghost', { onclick: () => { this.closeAll(); NF.Game.toTown(); } }, 'Back to the town square') : null),
         h('h3', 'Sound'),
@@ -605,6 +609,7 @@
             h('span', h('kbd', '1'), h('kbd', '2'), h('kbd', '3')), h('span', 'Choose a question in a conversation'),
             h('span', h('kbd', 'M')), h('span', 'Map, room directory and fast travel'),
             h('span', h('kbd', 'N')), h('span', 'Play this room’s narration (with captions)'),
+            h('span', h('kbd', 'F')), h('span', 'WWI Effacts: every effect of World War I in the museum, and where it is explained'),
             h('span', h('kbd', 'Esc')), h('span', 'Close a window, or open pause and settings')),
           h('p.muted', 'On a phone or tablet, use the round pad to walk and the E button to interact. You can also click the “Press E” prompt.')),
         h('div',
@@ -613,6 +618,7 @@
             h('li', 'A sparkle ✦ means you have not looked at that exhibit yet. A small check ✓ means you already have.'),
             h('li', 'A speech bubble over a person means you can talk to them and choose what to ask.'),
             h('li', 'A gold star ★ marks each room’s mini-game.'),
+            h('li', 'A gold “WWI Effact” box inside an exhibit explains one effect of World War I on America. Press F to see them all.'),
             h('li', 'The sign over every door shows the exhibit name, with a check once you have been inside.')),
           h('h3', 'If you get stuck'),
           h('ul.plain',
@@ -679,17 +685,51 @@
         this.musicCredits(),
         h('h3', 'Made for this project'),
         h('p', 'The pixel-art town, rooms and characters, the diagrams and the sound effects were made in code for this project. They are modern illustrations, not historical artifacts. Every conversation is written by the museum team and spoken by fictional guides or historical composites.'),
-        h('p', 'Fonts: Limelight, Pixelify Sans, Silkscreen, Special Elite and EB Garamond (open font licenses).'),
-        h('p.muted', 'To add your names, edit the TEAM list at the top of js/content.js.'));
+        h('p', 'Fonts: Limelight, Pixelify Sans, Silkscreen, Special Elite and EB Garamond (open font licenses).'));
       this.modal({ kicker: 'Team', title: 'Credits', body, cls: 'paper medium' });
     },
-    openBigQuestions() {
-      const C = this.C, Q = C.BIG_QUESTIONS;
+    openEssentialQuestions() {
+      const C = this.C;
       const body = h('div.prose',
-        h('p', 'Two questions run through the whole museum. You will answer them in writing at the Courthouse.'),
-        h('div.bq', h('div.bq-n', '1'), h('div', h('p.bq-q', Q.q1), h('p.muted', 'Look especially at Exhibit 2 (Harding’s policies), Exhibit 3 (Teapot Dome) and Exhibit 4 (Coolidge and the farmers).'))),
-        h('div.bq', h('div.bq-n', '2'), h('div', h('p.bq-q', Q.q2), h('p.muted', 'Look especially at Exhibit 1 (the Red Scare) and Exhibit 6 (immigration, free speech and civil rights).'))));
-      this.modal({ kicker: 'Reference library', title: 'The two big questions', body, cls: 'paper narrow' });
+        h('p', 'The museum answers three of the class essential questions. Each answer uses evidence from the exhibits, and the Courthouse asks you to write your own.'),
+        C.ESSENTIAL_QUESTIONS.map((E) => h('div.bq',
+          h('div.bq-n', E.code),
+          h('div',
+            h('p.bq-q', E.q),
+            h('div.eq-ans', h('h4', 'Our answer'), E.answer.map((p) => h('p', p))),
+            h('p.muted', 'Where to look: ' + E.look)))));
+      this.modal({ kicker: 'Reference library', title: 'Essential Questions', body, cls: 'paper medium' });
+    },
+    // Every WWI "Effact" in the museum, grouped by exhibit, with a way to read or walk to each one
+    openEffacts(focus) {
+      const C = this.C, G = NF.Game;
+      const here = G.map ? G.map.id : 'town';
+      let focusEl = null;
+      const groups = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6']
+        .map((rid) => [rid, C.EFFACTS.filter((e) => C.ARTIFACTS[e.art].room === rid)])
+        .filter(([, list]) => list.length);
+      const src = NF.src('historama-effects');
+      const body = h('div.prose',
+        h('p', `“Effacts” are facts about the effects of World War I on America, chosen from the class list. ${C.EFFACTS.length} of them are explained in exhibits throughout the museum. “Read it here” opens the display that explains it; “Go to” walks you to that building.`),
+        groups.map(([rid, list]) => {
+          const r = C.ROOMS[rid];
+          return h('section.eff-group', h('h3', `Exhibit ${r.num}: ${r.title}`), list.map((e) => {
+            const a = C.ARTIFACTS[e.art];
+            const card = h('div.effact' + (e.n === focus ? '.focus' : ''),
+              h('div.effact-tag', 'WWI EFFACT #' + e.n),
+              h('p.effact-text', e.text),
+              h('p.effact-here', h('b', 'Explained in: '), `“${a.title}” (Exhibit ${r.num}, ${r.building}). `, e.here),
+              h('div.btn-row',
+                h('button.deco-btn.small', { onclick: () => NF.Artifacts.open(e.art, true) }, 'Read it here'),
+                here === rid ? h('span.muted', 'You are in this exhibit now.')
+                  : h('button.deco-btn.small.ghost', { onclick: () => { this.closeAll(); G.travelTo(rid); } }, `Go to Exhibit ${r.num} ➜`)));
+            if (e.n === focus) focusEl = card;
+            return card;
+          }));
+        }),
+        src ? h('p.muted', 'Source: ', h('span', { html: src.mla + ' ' }), h('a', { href: src.url, target: '_blank', rel: 'noopener' }, 'link ↗')) : null);
+      this.modal({ kicker: 'World War I and America', title: 'WWI Effacts', body, cls: 'paper medium' });
+      if (focusEl) setTimeout(() => focusEl.scrollIntoView({ block: 'center' }), 60);
     },
     openScripts() {
       const C = this.C;

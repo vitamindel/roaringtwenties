@@ -4,9 +4,14 @@ A playable, pixel-art history museum about the Roaring Twenties and the promise 
 
 **Central question:** Did America's return to normalcy restore stability after World War I, or did it hide deeper problems in American government and society?
 
-**The two big questions** that run through the museum:
-1. How did the federal government's relationship with business and the public interest shape America's return to normalcy?
-2. Did the political and economic choices of the 1920s protect freedom and opportunity equally for all Americans?
+**Essential questions** the museum answers (the Library board shows each one with the team's answer):
+- **A1:** How do citizens, civic ideals and government institutions interact to balance the needs of individuals and the common good?
+- **A2:** How have economic, political and cultural decisions promoted or prevented the growth of personal freedom, individual responsibility, equality and respect for human dignity?
+- **C1:** How can individuals, groups and societies apply economic reasoning to make difficult choices about scarce resources? What are the possible consequences of these decisions for individuals, groups and societies?
+
+**WWI Effacts:** 15 facts from the class list about the effects of World War I on America appear inside the exhibits as gold "WWI Effact" boxes. Press **F** (or the F button in the top bar) to see them all, grouped by exhibit, with buttons to read each one or walk to its building.
+
+**Team:** Dyuti Hira (Captain), Ashwin Kirubakaran (Tech Geek), Ikeolu Ibironke (Main Researcher), Nitya Gupta (Secretary).
 
 ---
 
@@ -31,6 +36,7 @@ Then open **http://localhost:8000**. Any static server works. There is nothing t
 | **1, 2, 3, 4** | Choose a question during a conversation |
 | **M** | Map, room directory and fast travel |
 | **N** | Replay or stop the room narration (it also starts by itself the first time you enter an exhibit) |
+| **F** | WWI Effacts: every effect of World War I in the museum, and where it is explained |
 | **Esc** | Close a window, or open pause and settings |
 
 Phones and tablets get an on-screen joystick and an **E** button. You can also click the "Press E" prompt.
@@ -51,7 +57,7 @@ Phones and tablets get an on-screen joystick and an **E** button. You can also c
 5. Hall of Nations: America and the World
 6. Community Hall: Normalcy for Whom?
 7. **Courthouse:** your verdict on normalcy, plus written answers with feedback
-8. **Public Library:** bibliography, credits, scripts, music credits and the two big questions
+8. **Public Library:** bibliography, essential questions, the WWI Effacts easel, credits, scripts and music credits
 
 Inside every room, the red **EXIT** mat at the bottom leads back to the square. Progress saves automatically in the browser (Esc, then "Reset progress" to start over).
 
@@ -66,7 +72,7 @@ Visitors answer three questions in writing and press **Submit answer**. Each ans
 | Reasoning | States a claim and explains how the evidence supports it ("because," "this shows," and so on) |
 | Connection to normalcy | Ties the argument back to normalcy, public trust, the public interest, or equal opportunity |
 
-This is an **automatic rubric check** based on keywords and evidence. It is not a teacher and not an AI. Any conclusion can earn full marks if it is supported. Answers and feedback are saved so they can be revised and resubmitted. To change the questions, keywords or error checks, edit `WRITTEN` and `RED_FLAGS` in `js/content.js`.
+This is an **automatic rubric check** based on keywords and evidence. It is not a teacher and not an AI. Any conclusion can earn full marks if it is supported. Answers and feedback are saved so they can be revised and resubmitted. The three questions are tied to Essential Questions A1, C1 and A2. To change the questions, keywords or error checks, edit `WRITTEN` and `RED_FLAGS` in `js/content.js`.
 
 ## 4. Music
 
@@ -91,7 +97,6 @@ Tracks never overlap: the old one fades out before the next begins. Music lowers
 | Help-desk video | `media/video/helpdesk.mp4` | The title screen plays a computer-voice preview of the script, with captions |
 | Video captions | `media/captions/helpdesk.vtt` | Captions fall back to automatic timing from the script |
 | Room narrations (done) | `media/audio/room1.mp3` … `room6.mp3` | The narration panel uses a computer voice, with captions |
-| Team names | `js/content.js`, `TEAM` list at the top | Shows "[Your name here]" |
 
 The help-desk script is in **`docs/SCRIPTS.md`** (about 70 seconds).
 
@@ -108,7 +113,7 @@ The captions are the `cues` lists in `js/content.js` (each line is `[start time 
 
 ## 6. Editing the historical content
 
-Everything historical lives in **`js/content.js`**: rooms, narration, artifacts, conversations (`PEOPLE`), mini-game questions, courthouse questions, evidence for the verdict, sources, music and credits. You can edit text there without touching any game code.
+Everything historical lives in **`js/content.js`**: essential questions (`ESSENTIAL_QUESTIONS`), WWI Effacts (`EFFACTS`, each tied to the artifact that explains it), rooms, narration, artifacts, conversations (`PEOPLE`), mini-game questions, courthouse questions, evidence for the verdict, sources, music and credits. You can edit text there without touching any game code.
 
 - **Artifacts** have a short summary, background, "what this evidence tells us," "limits of this source," "why it matters," optional "read more" paragraphs, a question, images with captions, credits and alt text, and source IDs.
 - **Conversations:** each character has a greeting and two to four questions. Each answer can cite a source ID. Fictional guides and historical composites are labeled as such.

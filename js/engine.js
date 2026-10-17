@@ -284,6 +284,7 @@
       if (best && Input.hit('e', ' ', 'enter')) this.activate(best);
       if (Input.hit('m')) NF.UI.openMap();
       if (Input.hit('n')) NF.UI.toggleNarration();
+      if (Input.hit('f')) NF.UI.openEffacts();
       if (Input.hit('h', '?')) NF.UI.openHelp();
       if (Input.hit('escape', 'p')) NF.UI.openPause();
     },
@@ -533,7 +534,7 @@
           ctx.globalAlpha = done ? 0.55 : 1;
           ctx.drawImage(this.starIcon, x - 5, y - 52 + bob);
           ctx.globalAlpha = 1;
-        } else if (it.kind === 'verdict' || it.kind === 'biblio' || it.kind === 'credits' || it.kind === 'replay' || it.kind === 'eqboard' || it.kind === 'scripts') {
+        } else if (it.kind === 'verdict' || it.kind === 'biblio' || it.kind === 'credits' || it.kind === 'replay' || it.kind === 'eqboard' || it.kind === 'effacts' || it.kind === 'scripts') {
           const sp = this.sparkles[Math.floor(this.t * 6 + it.x) % 6];
           ctx.drawImage(sp, x - 4, y - 40 + bob);
         }

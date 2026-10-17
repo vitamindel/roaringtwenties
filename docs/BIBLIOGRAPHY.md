@@ -4,6 +4,8 @@
   *Type:* primary. *Used for:* The White House ceremony when the Kellogg-Briand Pact took effect (Exhibit 5).
 - *[Large Parade; Welcoming Armed Forces Home. Buffalo, N.Y., 1919]*. Photograph, c. 1919. Library of Congress, LC-USZ62-29645. https://www.loc.gov/item/2013648114/.  
   *Type:* primary. *Used for:* Demobilization and homecoming after World War I (Exhibit 1).
+- Alchin, Linda. “Effects of WW1 on America.” *American Historama*, Siteseen Ltd., 9 Jan. 2018. https://www.american-historama.org/1913-1928-ww1-prohibition-era/impact-ww1-on-america.htm.  
+  *Type:* tertiary. *Used for:* The class list of WWI “Effacts” (facts about the effects of World War I on America) shown throughout the museum.
 - American Civil Liberties Union. “The Successes of the American Civil Liberties Union.” ACLU. https://www.aclu.org/successes-american-civil-liberties-union.  
   *Type:* secondary. *Used for:* The ACLU’s founding in 1920 and its view of Gitlow v. New York as its first Supreme Court landmark. The ACLU is describing its own history.
 - American National Red Cross. *After the Race Riots June 1st, 1921, Tulsa, Okla.* Photograph, June 1921. Library of Congress, LC-DIG-anrc-14737. https://www.loc.gov/item/2017679759/.  
@@ -26,7 +28,7 @@
   *Type:* primary. *Used for:* Industrial mass production in the 1920s (Exhibits 2 and 4).
 - *Edward L. Doheny and His Lawyer Frank J. Hogan*. Photograph, 1 Feb. 1924. Library of Congress, LC-USZ62-51321. https://www.loc.gov/item/2002695652/.  
   *Type:* primary. *Used for:* Doheny during the investigation (Exhibit 3).
-- Federal Bureau of Investigation. “Palmer Raids.” *FBI History: Famous Cases and Criminals*, FBI. https://www.fbi.gov/history/famous-cases/palmer-raids.  
+- Federal Bureau of Investigation. “Palmer Raids.” *FBI History: Famous Cases and Criminals*, FBI. https://www.fbi.gov/history/cases-and-criminals/palmer-raids.  
   *Type:* secondary. *Used for:* The 1919 bombings and the Palmer Raids of the First Red Scare.
 - *First Correct Composite Photograph Made of President Coolidge’s First Dramatic Inaugural in Plymouth, Vt.* Composite photograph, c. 1925. Library of Congress, LC-USZ62-7885. https://www.loc.gov/item/2011647457/.  
   *Type:* primary. *Used for:* A 1925 composite image recreating Coolidge’s August 1923 oath of office (Exhibit 4).
@@ -92,6 +94,8 @@
   *Type:* secondary. *Used for:* Dedication of Wheeling’s Doughboy statue on Memorial Day, May 30, 1931, and its sculptor, E. M. Viquesney.
 - “President Pledges Stern Action in Pursuit of Guilty.” *Evening Star* [Washington, D.C.], 13 Feb. 1924, p. 1. Chronicling America, Library of Congress. https://www.loc.gov/resource/sn83045462/1924-02-13/ed-1/?sp=1.  
   *Type:* primary. *Used for:* Coolidge’s public response to the oil scandal and a “Silent Cal” cartoon (Exhibit 4).
+- Reynolds, Alan. “The Economic Impact of Tax Changes, 1920–1939.” *Cato Journal*, vol. 41, no. 1, Winter 2021, Cato Institute. https://www.cato.org/cato-journal/winter-2021/economic-impact-tax-changes-1920-1939.  
+  *Type:* secondary. *Used for:* Top income-tax rates of the 1920s (73% in 1921, 58% in 1922, 46% in 1924, 25% in 1925) and a pro-tax-cut interpretation. Note: Cato is a libertarian think tank.
 - *Secty of State Hughes Signing the Treaties Resulting from the Conference of Limitation of Armaments Today*. Photograph, 5 Feb. 1922. Library of Congress, LC-USZ6-1755. https://www.loc.gov/item/91730757/.  
   *Type:* primary. *Used for:* Hughes signing the naval treaties (Exhibit 5).
 - *Senator Warren G. Harding, Republican Nominee for President, Posing in the Shade of His Front Porch at Marion, Ohio*. Photograph, 22 Oct. 1920. Library of Congress, LC-USZ62-70724. https://www.loc.gov/item/2003654862/.  
@@ -100,8 +104,6 @@
   *Type:* primary. *Used for:* Period newspaper coverage of the Teapot Dome investigation (Exhibit 3).
 - *Strike Leader at Gary, Ind., Advising Strikers*. Photograph, 1919. Library of Congress, LC-USZ62-77539. https://www.loc.gov/item/2002695621/.  
   *Type:* primary. *Used for:* The 1919 steel strike (Exhibit 1).
-- “The Economic Impact of Tax Changes, 1920–1939.” *Cato Journal*, Winter 2021, Cato Institute. https://www.cato.org/cato-journal/winter-2021/economic-impact-tax-changes-1920-1939.  
-  *Type:* secondary. *Used for:* Top income-tax rates of the 1920s (73% in 1921, 58% in 1922, 46% in 1924, 25% in 1925) and a pro-tax-cut interpretation. Note: Cato is a libertarian think tank.
 - “Tulsa Race Massacre.” *The Encyclopedia of Oklahoma History and Culture*, Oklahoma Historical Society. https://www.okhistory.org/publications/enc/entry?entry=TU013.  
   *Type:* secondary. *Used for:* The Tulsa Race Massacre of May 31–June 1, 1921: duration, destruction, and death estimates.
 - U.S. Department of the Treasury. “Andrew W. Mellon (1921–1932).” *Prior Secretaries*, U.S. Department of the Treasury. https://home.treasury.gov/about/history/prior-secretaries/andrew-w-mellon-1921-1932.  

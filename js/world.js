@@ -631,8 +631,11 @@
     m.title = 'The Reference Library';
     [8, 44, 334, 370].forEach((x, i) => wallItem(m, F.bookshelf(36, 40 + i).c, x, 12));
     // EQ board
-    const eq = F.plaque(56, 34, '#1e2a2a'); A.textC(eq.g, 'THE TWO BIG', 28, 4, '#e2b85a', 1); A.textC(eq.g, 'QUESTIONS', 28, 11, '#e2b85a', 1); wallItem(m, eq, 88, 6);
+    const eq = F.plaque(56, 34, '#1e2a2a'); A.textC(eq.g, 'ESSENTIAL', 28, 4, '#e2b85a', 1); A.textC(eq.g, 'QUESTIONS', 28, 11, '#e2b85a', 1); wallItem(m, eq, 88, 6);
     inter(m, { kind: 'eqboard', x: 116, y: 70, r: 22 });
+    // WWI Effacts easel: a "WWI" card with a stack of fact cards
+    put(m, F.easel((g, x, y, w) => { R(g, x, y, w, 18, '#7a2630'); A.textC(g, 'WWI', x + w / 2, y + 2, '#f2d27a', 1); [9, 12, 15].forEach((yy) => R(g, x + 3, y + yy, w - 6, 1, '#f0e2c0')); }), 262, 132, { solid: [22, 6] });
+    inter(m, { kind: 'effacts', x: 262, y: 140, r: 22 });
     // projection screen
     const scr = A.canvas(80, 36); R(scr.g, 0, 0, 80, 36, '#3a2a1c'); R(scr.g, 2, 2, 76, 32, '#f4f0e4'); R(scr.g, 2, 30, 76, 4, '#d8d0c0'); A.textC(scr.g, 'HELP DESK', 40, 14, '#7a6a5a', 1);
     wallItem(m, scr, 168, 6);

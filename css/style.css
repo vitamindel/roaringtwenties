@@ -626,8 +626,22 @@ details.more p { margin: 8px 0 0; }
 
 /* big questions board */
 .bq { display: flex; gap: 14px; align-items: flex-start; margin: 12px 0; }
-.bq-n { flex: none; width: 34px; height: 34px; display: grid; place-items: center; font-family: var(--f-deco); font-size: 20px; background: var(--wine); color: var(--gold-2); }
+.bq-n { flex: none; width: 44px; height: 34px; display: grid; place-items: center; font-family: var(--f-deco); font-size: 20px; background: var(--wine); color: var(--gold-2); }
 .bq-q { font-size: calc(18px * var(--fs)); font-weight: 600; margin: 0 0 4px; }
+.bq + .bq { border-top: 1px dashed #c8b48a; padding-top: 12px; }
+.eq-ans { margin: 8px 0 6px; }
+.eq-ans h4 { font-family: var(--f-pixel); font-size: calc(14px * var(--fs)); color: var(--wine); margin: 0 0 4px; }
+.eq-ans p { margin: 0 0 8px; }
+
+/* WWI Effacts: callout inside exhibits and the full list */
+.effact { background: #fbf0cf; border: 2px solid var(--gold-d); border-left-width: 6px; padding: 10px 12px; margin: 0 0 10px; color: var(--text); }
+.effact.focus { box-shadow: 0 0 0 3px var(--wine); }
+.effact-tag { font-family: var(--f-tiny); font-size: 10px; letter-spacing: 0.15em; color: var(--wine); margin-bottom: 4px; }
+.effact-text { font-weight: 600; margin: 0 0 6px; }
+.effact-here { margin: 0; font-size: calc(15px * var(--fs)); }
+.effact .btn-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.effact-box { margin-bottom: 14px; }
+.eff-group h3 { margin-top: 16px; }
 .game-modal .g-card .muted, .game-modal .grade .muted, .modal.paper .muted { color: #6a5a48; }
 .g-card .media-cap { color: #6a5a48; }
 .map-grid { align-items: start; }

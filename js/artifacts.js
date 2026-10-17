@@ -239,12 +239,13 @@
   /* ---------- the archive window ---------- */
   const Artifacts = (NF.Artifacts = {
     media: MEDIA,
-    open(id) {
+    // preview: opened from the WWI Effacts list, so it does not count as examined
+    open(id, preview) {
       const C = NF.CONTENT, a = C.ARTIFACTS[id];
       if (!a) { NF.UI.toast('This exhibit is not available.', 'ARCHIVE', '!'); return; }
       const S = NF.Save.data;
-      const first = !S.examined[id];
-      S.examined[id] = true; NF.Save.save();
+      const first = !preview && !S.examined[id];
+      if (!preview) { S.examined[id] = true; NF.Save.save(); }
       this._boardDone = false;
       const room = C.ROOMS[a.room];
       const kind = a.media && a.media.kind;
@@ -264,6 +265,7 @@
         a.summary ? h('p.af-lead', a.summary) : null,
         a.excerpt ? h('blockquote.quote', a.excerpt.text, h('cite', a.excerpt.by)) : null,
         a.excerpt && a.excerpt.second ? h('blockquote.quote', a.excerpt.second.text, h('cite', a.excerpt.second.by)) : null,
+        this.effactBox(id),
         section('Background', a.background),
         section('What this evidence tells us', a.tells),
         section('Limits of this source', a.limits),
@@ -280,6 +282,17 @@
         NF.Audio.sfx('discover');
         NF.UI.updateHud();
       }
+    },
+    // The class's WWI "Effacts" that this artifact explains
+    effactBox(id) {
+      const list = NF.CONTENT.EFFACTS.filter((e) => e.art === id || (e.also || []).includes(id));
+      if (!list.length) return null;
+      return h('section.af-sec.effact-box', { 'aria-label': 'WWI Effacts' },
+        list.map((e) => h('div.effact',
+          h('div.effact-tag', 'WWI EFFACT #' + e.n),
+          h('p.effact-text', e.text),
+          h('p.effact-here', h('b', 'Why it matters here: '), e.here))),
+        h('button.link-btn.dark', { onclick: () => NF.UI.openEffacts(list[0].n) }, 'See all WWI Effacts ›'));
     },
     questionBox(a) {
       if (!a.question) return null;

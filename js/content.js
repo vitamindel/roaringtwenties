@@ -11,13 +11,13 @@
   const NF = (window.NF = window.NF || {});
 
   /* -------------------------------------------------------------------
-     1. TEAM CREDITS (replace the placeholder names with your group)
+     1. TEAM CREDITS
      ------------------------------------------------------------------- */
   const TEAM = [
-    { role: 'Captain', name: '[Your name here]', duties: 'Coordinates the project, monitors progress, and makes sure the museum meets every assignment requirement.' },
-    { role: 'Tech Geek', name: '[Your name here]', duties: 'Manages website development, game mechanics, visual implementation, and technical troubleshooting.' },
-    { role: 'Main Researcher', name: '[Your name here]', duties: 'Verifies historical accuracy, selects artifacts, evaluates sources, and prepares the historical narration.' },
-    { role: 'Secretary', name: '[Your name here]', duties: 'Tracks tasks, organizes materials and citations, and maintains the bibliography and submission documents.' },
+    { role: 'Captain', name: 'Dyuti Hira', duties: 'Coordinates the project, monitors progress, and makes sure the museum meets every assignment requirement.' },
+    { role: 'Tech Geek', name: 'Ashwin Kirubakaran', duties: 'Manages website development, game mechanics, visual implementation, and technical troubleshooting.' },
+    { role: 'Main Researcher', name: 'Ikeolu Ibironke', duties: 'Verifies historical accuracy, selects artifacts, evaluates sources, and prepares the historical narration.' },
+    { role: 'Secretary', name: 'Nitya Gupta', duties: 'Tracks tasks, organizes materials and citations, and maintains the bibliography and submission documents.' },
   ];
 
   /* -------------------------------------------------------------------
@@ -86,12 +86,78 @@
   }, []);
 
   /* -------------------------------------------------------------------
-     5. THE TWO BIG QUESTIONS
+     5. ESSENTIAL QUESTIONS
+     The class's essential questions (code + wording as assigned). The
+     museum answers three of them. Shown on the Library board.
      ------------------------------------------------------------------- */
-  const BIG_QUESTIONS = {
-    q1: 'How did the federal government’s relationship with business and the public interest shape America’s return to normalcy?',
-    q2: 'Did the political and economic choices of the 1920s protect freedom and opportunity equally for all Americans?',
-  };
+  const ESSENTIAL_QUESTIONS = [
+    {
+      code: 'A1',
+      q: 'How do citizens, civic ideals and government institutions interact to balance the needs of individuals and the common good?',
+      answer: [
+        'In the 1920s, no single institution kept the balance between individuals and the common good. Citizens, the press, Congress and the courts checked one another, and the balance often tipped too far before it was corrected. Teapot Dome is the clearest example. Interior Secretary Albert Fall secretly leased the Navy’s oil reserves, a resource that belonged to the whole nation, to oilmen Harry Sinclair and Edward Doheny, and he took money from them. A Wall Street Journal report in April 1922 and Senator Thomas Walsh’s investigation exposed the deals. The Supreme Court cancelled the leases in 1927, and Fall was convicted of accepting a bribe in 1929. The scandal even strengthened Congress: in McGrain v. Daugherty (1927), the Court confirmed that Congress can force witnesses to testify.',
+        'The same tension shaped civil liberties. After the 1919 bombings, the government argued that the common good required the Palmer Raids, which swept up thousands of people, many without proper legal process. Citizens pushed back by founding the ACLU in 1920, and in Gitlow v. New York (1925) the Supreme Court upheld a conviction but treated free speech as protected from state governments. Harding’s Budget and Accounting Act (1921) shows a calmer version of the same balance: an independent auditor watching how taxpayers’ money was spent. Our conclusion is that government institutions protect the common good best when citizens and other institutions are willing to hold them accountable.',
+      ],
+      look: 'Exhibit 1 (the Red Scare), Exhibit 2 (the Budget and Accounting Act), Exhibit 3 (Teapot Dome) and Exhibit 6 (Gitlow v. New York and the ACLU).',
+    },
+    {
+      code: 'A2',
+      q: 'How have economic, political and cultural decisions promoted or prevented the growth of personal freedom, individual responsibility, equality and respect for human dignity?',
+      answer: [
+        'Decisions made in the name of normalcy expanded freedom for some Americans while closing it off for others. Some decisions promoted freedom. The 19th Amendment, ratified in August 1920, guaranteed women across the country the right to vote, and the 1920 election was the first presidential election held under it. Harding commuted socialist Eugene Debs’s prison sentence in 1921 and, in Birmingham, Alabama, publicly criticized the unfair treatment of Black Americans. Gitlow v. New York (1925) began protecting free speech from state governments. Cultural change mattered too: in the Great Migration, Black Southerners moved north for better jobs and built movements like the Harlem Renaissance.',
+        'Many other decisions prevented equality and denied human dignity. The Immigration Act of 1924 used the 1890 census to cut immigration from southern and eastern Europe and barred almost all immigration from Asia, judging people by their national origin instead of as individuals. The Senate blocked the Dyer Anti-Lynching Bill, and the Tulsa Race Massacre of 1921 went unpunished. In 1922 a federal injunction broke the railroad shop workers’ strike, limiting workers’ freedom to bargain. Harding’s idea of individual responsibility, that problems should not be solved by “a transfer of responsibility from citizenship to government,” offered little to people whom the law itself excluded. Our conclusion is that freedom and dignity grew unevenly in the 1920s, depending on a person’s race, national origin, gender and class.',
+      ],
+      look: 'Exhibit 1 (the 1920 election and Harding’s recording), Exhibit 2 (the 1922 railroad strike) and Exhibit 6 (immigration, free speech and civil rights).',
+    },
+    {
+      code: 'C1',
+      q: 'How can individuals, groups and societies apply economic reasoning to make difficult choices about scarce resources? What are the possible consequences of these decisions for individuals, groups and societies?',
+      answer: [
+        'Almost every major policy of the 1920s was a choice about scarce resources, and economic reasoning explains both why leaders chose as they did and who paid the price. Tax dollars were limited, so the Coolidge administration weighed tax cuts and paying down the war debt against farm relief. Working with Treasury Secretary Andrew Mellon, it cut the top income-tax rate to 25 percent by 1926 and reduced the federal debt from about $25.5 billion in 1919 to about $16.9 billion in 1929. The opportunity cost fell on farmers. Coolidge vetoed the McNary-Haugen farm bills in 1927 and 1928, reasoning that price supports would be costly and encourage overproduction, and farm hardship lasted all decade while cities boomed.',
+        'The Navy’s oil reserves at Teapot Dome and Elk Hills were a scarce resource saved for wartime. Leasing them could be defended on economic grounds, but doing it in secret and without competitive bidding turned a public resource into private profit. Choices also spread consequences across whole societies. The Fordney-McCumber Tariff (1922) protected American manufacturers but raised prices for consumers and made it harder for Europe to earn the dollars it needed to repay war debts. The Dawes Plan cycle of American loans, German reparations and Allied debt payments worked only until American lending dried up in 1928. Our conclusion is that economic reasoning helps people compare costs and benefits, but the consequences depend on whose costs are counted.',
+      ],
+      look: 'Exhibit 2 (the tax cuts and the tariff), Exhibit 3 (the oil reserves), Exhibit 4 (the budget game and the farm vetoes) and Exhibit 5 (the Dawes Plan money cycle).',
+    },
+  ];
+
+  /* -------------------------------------------------------------------
+     5b. WWI "EFFACTS" (facts about the effects of World War I on America)
+     n: the Effact number on the class list. text: the Effact, lightly
+     edited for style. art: the artifact where it is explained (also: other
+     places it appears). here: how it connects to that exhibit.
+     ------------------------------------------------------------------- */
+  const EFFACTS = [
+    { n: 1, art: 'r5_flow', text: 'Unlike the war-torn cities of Europe, the homes and industries of the nation were relatively unscathed by the war. The late entry of the U.S. meant that fewer men had lost their lives than in Europe.',
+      here: 'Because American farms and factories came through the war undamaged, the United States finished the war as the world’s lender. That is why the money on the Great Map starts in American banks and ends with the U.S. government.' },
+    { n: 2, art: 'r2_wall', text: 'Production and efficiency in industries and factories had increased. Technology had advanced and the nation had entered the age of steel and electricity.',
+      here: 'Ford’s River Rouge plant, on the left side of this wall, shows the age of steel and electricity in one photograph: wartime efficiency turned into peacetime mass production.' },
+    { n: 4, art: 'r1_herald', text: 'The 19th Amendment was passed by Congress on June 4, 1919, and ratified on August 18, 1920. Women’s suffrage gave women the right to vote.',
+      here: 'The election on this front page was the first presidential election held after the amendment was ratified, so women across the country could vote for president and the electorate that chose Harding was larger than ever.' },
+    { n: 6, art: 'r1_parade', text: 'Inflation increases the cost of living: the cost of housing, food, clothing and other essentials. In 1919, prices rose at an average of more than 15%.',
+      here: 'The soldiers in this parade came home to prices that had climbed during the war and kept climbing. A paycheck bought less every month, which is one reason a promise of “normalcy” sounded so good.' },
+    { n: 7, art: 'r6_immig', text: 'Before the war the nation had witnessed a massive increase in immigration from many European countries, raising the issue of “Old Immigrants” versus “New Immigrants.”',
+      here: '“Old” immigrants came mostly from northern and western Europe; “new” immigrants came mostly from southern and eastern Europe. By switching to the 1890 census, taken before most “new” immigrants arrived, the 1924 law turned that divide into federal policy.' },
+    { n: 8, art: 'r6_unequal', text: 'During the war, between 300,000 and 500,000 African Americans moved north to the cities in the “Great Migration.”',
+      here: 'The war slowed immigration from Europe just as Northern factories needed workers, which opened new jobs to Black Southerners. The timeline in this display follows that migration into the 1920s.' },
+    { n: 11, art: 'r6_unequal', text: 'In 1919, over 20 race riots broke out in the cities of the United States. The most serious was the 1919 Chicago Race Riot.',
+      here: 'This wave of violence in 1919, often called the “Red Summer,” came two years before the Tulsa Race Massacre shown here. Normalcy did not bring safety to Black communities.' },
+    { n: 12, art: 'r2_wall', text: 'The number of workers in labor unions increased dramatically. Workers had been given the right to strike, and industrialists and business leaders wanted to break their power.',
+      here: 'The 1922 railroad strike, on the right side of this wall, shows that fight continuing: a federal injunction helped the railroads defeat the striking shop workers.' },
+    { n: 14, art: 'r1_strike', text: 'The Boston Police Strike broke out on September 9, 1919, when 75% of Boston police officers went on strike. Looting and rioting erupted in the city and the National Guard was called in. The police strikers were called “Agents of Lenin.”',
+      here: 'Massachusetts governor Calvin Coolidge’s reply, “There is no right to strike against the public safety,” made him famous and helped put him on the 1920 ticket with Harding.' },
+    { n: 15, art: 'r1_strike', text: 'The Great Steel Strike of 1919 was a national strike lasting from September 21, 1919, to January 8, 1920, and involving 350,000 steelworkers. U.S. Steel refused to talk to union leaders and hired African Americans and Mexicans as replacement workers. The steel companies spread fear by equating the strikers with communists, and public opinion turned against unions.',
+      here: 'The photograph in this display was taken during this strike, in Gary, Indiana.' },
+    { n: 16, art: 'r1_redscare', text: 'It was in this climate that the First Red Scare (1918–1920) hit the nation. The Red Scare refers to the fear of communism in the United States after the war.',
+      here: 'This timeline shows how strikes, bombings, the Red Scare and the League of Nations fight piled up in 1919, making Harding’s promise of calm very appealing in 1920.' },
+    { n: 17, art: 'r1_redscare', also: ['r6_aclu'], text: 'A series of bomb explosions in 1919 led to a campaign against communists by U.S. Attorney General A. Mitchell Palmer, called the Palmer Raids. Agents raided the headquarters of radical organizations and the homes of immigrants and foreign residents.',
+      here: 'Palmer’s portrait hangs in Exhibit 1. The raids also led reformers to found the ACLU in 1920, which you can read about in Exhibit 6.' },
+    { n: 22, art: 'r4_ticker', text: 'The war era marked the dawn of the large-scale use of electricity, labor-saving appliances such as refrigerators, washing machines and vacuum cleaners, automobiles and telephones.',
+      here: 'These are the goods pouring out of the factories on the ticker’s timeline, and many families bought them on installment plans.' },
+    { n: 23, art: 'r4_tax', text: 'During World War I, Liberty Bonds, and later Victory Bonds, introduced the idea of financial securities to many Americans and encouraged investment by people from all walks of life.',
+      here: 'Those bonds were the wartime borrowing behind the federal debt of about $25.5 billion in 1919. Paying that debt down to about $16.9 billion by 1929 was a central goal of Coolidge and Mellon.' },
+    { n: 24, art: 'r4_ticker', text: 'Ordinary Americans were building up high debts because of easy credit and started to gamble on the stock market, believing it was a “safe bet.”',
+      here: 'Americans who first learned to invest by buying war bonds (Effact #23) now bought stocks “on margin” with borrowed money. The timeline ends with the crash of October 1929.' },
+  ];
 
   /* -------------------------------------------------------------------
      6. SOURCES (bibliography, MLA 9th edition style)
@@ -112,7 +178,7 @@
     { id: 'stat-revenue', type: 'primary', mla: 'United States, Congress. <i>Revenue Act of 1921</i>. 42 Stat. 227, 23 Nov. 1921. GovInfo.', url: 'https://www.govinfo.gov/content/pkg/STATUTE-42/pdf/STATUTE-42-Pg227.pdf', use: 'Title, date and first-page scan of the 1921 tax law.' },
     { id: 'stat-tariff', type: 'primary', mla: 'United States, Congress. <i>Tariff Act of 1922</i> [Fordney-McCumber Tariff]. 42 Stat. 858, 21 Sept. 1922. GovInfo.', url: 'https://www.govinfo.gov/content/pkg/STATUTE-42/pdf/STATUTE-42-Pg858-2.pdf', use: 'Date, first-page scan, and wording of Section 315, the “flexible tariff” provision.' },
     { id: 'time-1923', type: 'primary', mla: '“National Affairs: Elasticity.” <i>TIME</i>, 28 Apr. 1923.', url: 'https://time.com/archive/6817817/national-affairs-elasticity/', use: 'A 1923 magazine explanation of the flexible tariff: the president could raise or lower duties by up to 50 percent on the Tariff Commission’s recommendation.' },
-    { id: 'cato-tax', type: 'secondary', mla: '“The Economic Impact of Tax Changes, 1920–1939.” <i>Cato Journal</i>, Winter 2021, Cato Institute.', url: 'https://www.cato.org/cato-journal/winter-2021/economic-impact-tax-changes-1920-1939', use: 'Top income-tax rates of the 1920s (73% in 1921, 58% in 1922, 46% in 1924, 25% in 1925) and a pro-tax-cut interpretation. Note: Cato is a libertarian think tank.' },
+    { id: 'cato-tax', type: 'secondary', mla: 'Reynolds, Alan. “The Economic Impact of Tax Changes, 1920–1939.” <i>Cato Journal</i>, vol. 41, no. 1, Winter 2021, Cato Institute.', url: 'https://www.cato.org/cato-journal/winter-2021/economic-impact-tax-changes-1920-1939', use: 'Top income-tax rates of the 1920s (73% in 1921, 58% in 1922, 46% in 1924, 25% in 1925) and a pro-tax-cut interpretation. Note: Cato is a libertarian think tank.' },
     { id: 'dah-rail', type: 'tertiary', mla: 'Wish, Harvey. “Railway Shopmen’s Strike.” <i>Dictionary of American History</i>, Encyclopedia.com.', url: 'https://www.encyclopedia.com/history/dictionaries-thesauruses-pictures-and-press-releases/railway-shopmens-strike', use: 'The 1922 railway shopmen’s strike: start date, roughly 400,000 union members, Daugherty’s “sweeping injunction,” and the settlement.' },
     { id: 'treasury-mellon', type: 'secondary', mla: 'U.S. Department of the Treasury. “Andrew W. Mellon (1921–1932).” <i>Prior Secretaries</i>, U.S. Department of the Treasury.', url: 'https://home.treasury.gov/about/history/prior-secretaries/andrew-w-mellon-1921-1932', use: 'Andrew Mellon’s tenure as Treasury Secretary under Harding, Coolidge, and Hoover.' },
     { id: 'fiscal-debt', type: 'primary', mla: 'U.S. Department of the Treasury. “Historical Debt Outstanding.” <i>Fiscal Data</i>.', url: 'https://fiscaldata.treasury.gov/datasets/historical-debt-outstanding/', use: 'Federal debt totals: about $25.5 billion (fiscal 1919) and about $16.9 billion (fiscal 1929).' },
@@ -134,8 +200,9 @@
     { id: 'nara-migration', type: 'secondary', mla: 'National Archives. “The Great Migration (1910–1970).” <i>African American Heritage</i>, U.S. National Archives and Records Administration.', url: 'https://www.archives.gov/research/african-americans/migrations/great-migration', use: 'Scale, causes, and destinations of the Great Migration, and the discrimination migrants faced.' },
     { id: 'ohs-tulsa', type: 'secondary', mla: '“Tulsa Race Massacre.” <i>The Encyclopedia of Oklahoma History and Culture</i>, Oklahoma Historical Society.', url: 'https://www.okhistory.org/publications/enc/entry?entry=TU013', use: 'The Tulsa Race Massacre of May 31–June 1, 1921: duration, destruction, and death estimates.' },
     { id: 'naacp-dyer', type: 'secondary', mla: 'NAACP. “Dyer Anti-Lynching Bill.” <i>History Explained: Legislative Milestones</i>, NAACP.', url: 'https://naacp.org/find-resources/history-explained/legislative-milestones/dyer-anti-lynching-bill', use: 'The Dyer Anti-Lynching Bill: passed by the House in 1922 and blocked in the Senate.' },
-    { id: 'fbi-palmer', type: 'secondary', mla: 'Federal Bureau of Investigation. “Palmer Raids.” <i>FBI History: Famous Cases and Criminals</i>, FBI.', url: 'https://www.fbi.gov/history/famous-cases/palmer-raids', use: 'The 1919 bombings and the Palmer Raids of the First Red Scare.' },
+    { id: 'fbi-palmer', type: 'secondary', mla: 'Federal Bureau of Investigation. “Palmer Raids.” <i>FBI History: Famous Cases and Criminals</i>, FBI.', url: 'https://www.fbi.gov/history/cases-and-criminals/palmer-raids', use: 'The 1919 bombings and the Palmer Raids of the First Red Scare.' },
     { id: 'ushistory-46', type: 'secondary', mla: 'Independence Hall Association. “The Decade That Roared.” <i>U.S. History Online Textbook</i>, ushistory.org.', url: 'https://www.ushistory.org/us/46.asp', use: 'Class starting point: the consumer economy, automobiles, radio, and cultural change in the 1920s.' },
+    { id: 'historama-effects', type: 'tertiary', mla: 'Alchin, Linda. “Effects of WW1 on America.” <i>American Historama</i>, Siteseen Ltd., 9 Jan. 2018.', url: 'https://www.american-historama.org/1913-1928-ww1-prohibition-era/impact-ww1-on-america.htm', use: 'The class list of WWI “Effacts” (facts about the effects of World War I on America) shown throughout the museum.' },
     { id: 'ocpl-doughboy', type: 'secondary', mla: 'Ohio County Public Library. “The Doughboy Monument.” <i>Wheeling History</i>, Ohio County Public Library.', url: 'https://www.ohiocountylibrary.org/wheeling-history/the-doughboy-monument/5162', use: 'Dedication of Wheeling’s Doughboy statue on Memorial Day, May 30, 1931, and its sculptor, E. M. Viquesney.' },
     // --- Library of Congress photographs and prints (primary sources) ---
     { id: 'p-harding', type: 'primary', mla: '<i>Warren G. Harding</i>. Photograph, between 1921 and 1923. Library of Congress Prints and Photographs Division, LC-USZ62-29218.', url: 'https://www.loc.gov/item/2002695720/', use: 'Portrait of President Harding (Exhibit 2).' },
@@ -281,7 +348,7 @@
     library: {
       num: 8, title: 'The Reference Library', building: 'Public Library', short: 'Library', color: '#2a3a4a',
       question: 'Where does the evidence come from?',
-      objective: 'Browse the card catalog, credits, scripts and music credits.',
+      objective: 'Browse the card catalog, essential questions, WWI Effacts, credits and scripts.',
     },
   };
 
@@ -1150,7 +1217,7 @@
      ------------------------------------------------------------------- */
   const WRITTEN = [
     {
-      id: 'w1', title: 'Normalcy and Teapot Dome',
+      id: 'w1', title: 'Essential Question A1: Normalcy and Teapot Dome',
       q: 'Based on the evidence you examined, did Harding’s promise of normalcy lead to better government, or did the Teapot Dome scandal reveal serious problems with the administration? Support your answer with specific historical evidence.',
       tip: 'Make a clear claim, use at least one specific piece of evidence (a name, law, date or artifact), and explain how it supports your claim.',
       evidence: [
@@ -1162,27 +1229,27 @@
       connect: ['normalcy', 'normal', 'public trust', 'trust', 'accountab', 'honest', 'better government', 'stability', 'promise', 'corrupt', 'oversight', 'public interest', 'public resources'],
     },
     {
-      id: 'w2', title: 'Government, Business and the Public Interest',
-      q: 'How did the federal government’s relationship with business shape America’s return to normalcy? Choose at least one policy (for example the Mellon tax cuts, the Fordney-McCumber Tariff, the Budget and Accounting Act, the 1922 strike injunction, or the farm vetoes) and argue whether it served the public interest.',
-      tip: 'Name the policy, explain who it helped and who it hurt, and say whether that served the public as a whole.',
+      id: 'w2', title: 'Essential Question C1: Hard Choices about Scarce Resources',
+      q: 'Choose one 1920s decision about a scarce resource (for example tax dollars and the Mellon tax cuts, farm relief and the McNary-Haugen vetoes, the Navy’s oil reserves, or the Fordney-McCumber Tariff). Explain the economic reasoning behind the decision and its consequences for at least one group of Americans.',
+      tip: 'Name the decision, explain why leaders made it, then say who gained, who paid the cost, and whether you think it served the public as a whole.',
       evidence: [
         ['mellon', 'Andrew Mellon'], ['tax cut|revenue act|lower(ed)? tax|tax rate', 'the tax cuts'], ['tariff|fordney|mccumber|import', 'the Fordney-McCumber Tariff'], ['budget and accounting|budget act|bureau of the budget|general accounting|auditor', 'the Budget and Accounting Act'],
         ['injunction|railroad strike|shopmen|daugherty|1922 strike', 'the 1922 railroad strike'], ['mcnary|haugen|farm|crop', 'farm policy'], ['debt|surplus', 'debt reduction'], ['coolidge', 'Coolidge'], ['harding', 'Harding'],
-        ['chief business|business of the american people', 'Coolidge’s 1925 speech'], ['teapot|lease', 'Teapot Dome'], ['73|58|25 percent|25%', 'specific tax rates'], ['\\b(1921|1922|1924|1926|1927|1928)\\b', 'a specific date'], ['consumer|price', 'effects on consumers'], ['worker|labor|union', 'effects on workers'],
+        ['chief business|business of the american people', 'Coolidge’s 1925 speech'], ['teapot|lease|elk hills|oil reserve', 'the Navy’s oil reserves'], ['73|58|25 percent|25%', 'specific tax rates'], ['\\b(1921|1922|1924|1926|1927|1928)\\b', 'a specific date'], ['consumer|price', 'effects on consumers'], ['worker|labor|union', 'effects on workers'],
       ],
-      connect: ['normalcy', 'normal', 'public interest', 'public', 'common good', 'everyone', 'stability', 'prosperity', 'wealthy', 'fair'],
+      connect: ['normalcy', 'normal', 'public interest', 'public', 'common good', 'everyone', 'stability', 'prosperity', 'wealthy', 'fair', 'scarce', 'trade-off', 'tradeoff', 'opportunity cost', 'consequence', 'cost'],
     },
     {
-      id: 'w3', title: 'Freedom and Opportunity for All?',
-      q: 'Did the political and economic choices of the 1920s protect freedom and opportunity equally for all Americans? Support your claim with evidence about at least one group of people.',
-      tip: 'Pick a group (immigrants, workers, farmers, Black Americans, political radicals, business owners), give specific evidence, and explain what it shows about equal freedom or opportunity.',
+      id: 'w3', title: 'Essential Question A2: Freedom, Equality and Human Dignity',
+      q: 'Did the political, economic and cultural decisions of the 1920s promote or prevent personal freedom, equality and respect for human dignity? Support your claim with evidence about at least one group of people.',
+      tip: 'Pick a group (immigrants, workers, farmers, women, Black Americans, political radicals, business owners), give specific evidence, and explain what it shows about freedom, equality or dignity.',
       evidence: [
         ['immigration act|johnson-reed|quota|1890 census|national origin', 'the Immigration Act of 1924'], ['japan|japanese|asia', 'Japanese exclusion'], ['ellis island|immigrant', 'immigrants'],
         ['gitlow', 'Gitlow v. New York'], ['first amendment|fourteenth amendment|free speech|freedom of speech', 'free-speech protections'], ['aclu|civil liberties', 'the ACLU'], ['palmer|red scare|raids', 'the Palmer Raids'], ['debs', 'Eugene Debs'],
         ['tulsa|greenwood', 'the Tulsa Race Massacre'], ['dyer|lynching', 'the Dyer Anti-Lynching Bill'], ['great migration|migrat', 'the Great Migration'], ['jim crow|segregat|discriminat', 'segregation and discrimination'],
         ['farmer|mcnary|haugen', 'farmers'], ['worker|strike|union|injunction', 'workers'], ['\\b(1919|1920|1921|1922|1924|1925)\\b', 'a specific date'],
       ],
-      connect: ['normalcy', 'normal', 'equal', 'equally', 'freedom', 'opportunity', 'rights', 'liberty', 'excluded', 'left out', 'fair', 'all americans', 'everyone'],
+      connect: ['normalcy', 'normal', 'equal', 'equally', 'freedom', 'opportunity', 'rights', 'liberty', 'excluded', 'left out', 'fair', 'all americans', 'everyone', 'dignity', 'promote', 'prevent'],
     },
   ];
   // Common factual errors the checker watches for (applies to every question)
@@ -1216,7 +1283,8 @@
         { q: 'How do I play?', a: ['Walk with W A S D or the arrow keys. When you see “Press E,” press E or Space.', 'Sparkles mark things you have not examined yet. A gold star marks each room’s game. Press M for the map any time.'] },
         { q: 'Where should I start?', a: ['Start with Exhibit 1, Union Station, in the top-left corner of town. The gold arrow at the top of the screen always points to your next stop.', 'The exhibits go clockwise around the square, and you finish at the Courthouse.'] },
         { q: 'What does “normalcy” mean?', a: ['It was Warren G. Harding’s campaign word in 1920. He promised calm after the war: less government experimenting, more focus at home.', 'You can hear him say it in his own voice on the gramophone in Exhibit 1.'], src: 'loc-readjust' },
-        { q: 'Is there a big question I should think about?', a: ['Two, actually. First: how did the federal government’s relationship with business and the public interest shape the return to normalcy?', 'Second: did the choices of the 1920s protect freedom and opportunity equally for all Americans? The Courthouse will ask you to answer them.'] },
+        { q: 'What are the essential questions?', a: ['Three guide this museum. A1: how do citizens and government institutions balance individual needs and the common good? A2: did the decisions of the era promote or prevent freedom, equality and human dignity? C1: how do people make hard choices about scarce resources?', 'The board in the Library has all three with our answers, and the Courthouse asks you to write about them.'] },
+        { q: 'What are the WWI Effacts?', a: ['“Effacts” are facts about the effects of World War I on America. Fifteen of them are hidden in the exhibits; look for the gold “WWI Effact” box when you examine something.', 'Press F any time, or click the F button at the top of the screen, to see all of them and jump to where each one is explained.'], src: 'historama-effects' },
       ] },
     vet: { name: 'Returning Veteran', label: 'Historical composite', look: 'veteran',
       greet: 'Got home from France in ’19. Everybody threw a parade. Then everybody asked if I had a job yet.',
@@ -1371,7 +1439,8 @@
       topics: [
         { q: 'Where is the bibliography?', a: ['In the card catalog on the left. It is in MLA style, and you can copy it straight into Word.'] },
         { q: 'Where does the music come from?', a: ['Real jazz recordings made between 1920 and 1924, now in the public domain. The music credits on the lectern list each one with a link.'] },
-        { q: 'What are the two big questions?', a: ['Read the board on the wall. One is about government, business and the public interest; the other asks whether freedom and opportunity were shared equally.'] },
+        { q: 'What are the essential questions?', a: ['Read the board on the wall. It shows Essential Questions A1, A2 and C1, each with the museum team’s answer and the exhibits that hold the evidence.'] },
+        { q: 'What is on the easel?', a: ['The WWI Effacts: fifteen facts about how World War I changed America. Each card tells you which exhibit explains it, and you can jump straight there.'], src: 'historama-effects' },
       ] },
   };
 
@@ -1386,7 +1455,7 @@
     hub: { title: 'Museum Hub: Town Square', text: 'You are at the center of the museum. Exhibits 1 to 3 line the north road, Exhibit 4 is to the east, Exhibits 5 and 6 are to the south, the Courthouse is in the southwest corner, and the Library is to the west. Press M to open the map.' },
   };
 
-  NF.CONTENT = { TEAM, MEDIA, MUSIC, NARRATORS, ROOM_MUSIC, HELPDESK, HELPDESK_CUES, BIG_QUESTIONS, SOURCES, ROOMS, ARTIFACTS, GAMES, EVIDENCE, VERDICTS, FOLLOWUPS, WRITTEN, RED_FLAGS, PEOPLE, SIGNS,
+  NF.CONTENT = { TEAM, MEDIA, MUSIC, NARRATORS, ROOM_MUSIC, HELPDESK, HELPDESK_CUES, ESSENTIAL_QUESTIONS, EFFACTS, SOURCES, ROOMS, ARTIFACTS, GAMES, EVIDENCE, VERDICTS, FOLLOWUPS, WRITTEN, RED_FLAGS, PEOPLE, SIGNS,
     title: 'THE NORMALCY FILES', subtitle: 'A journey through America’s search for stability after World War I',
     centralQuestion: 'Did America’s return to normalcy restore stability after World War I, or did it conceal deeper problems in American government and society?' };
   NF.src = function (id) { return SOURCES.find((s) => s.id === id); };

@@ -153,7 +153,7 @@
       const end = () => {
         const max = G.policies.length * 10 + G.policies.length * 10 + G.quiz.length * 10;
         sh.set(h('div.g-card.result-banner', h('div.g-kicker', 'POLICY DESK COMPLETE'), h('div.big', `${score} / ${max} points`),
-          h('p', 'Normalcy wasn’t “no government.” Budgets, tariffs, tax cuts, and court injunctions were all deliberate choices, and each helped some groups more than others. That is the heart of the first big question: whom did government serve?')), nextBtn('Finish ✓', () => NF.UI.closeTop()));
+          h('p', 'Normalcy wasn’t “no government.” Budgets, tariffs, tax cuts, and court injunctions were all deliberate choices, and each helped some groups more than others. That is the heart of Essential Question C1: every choice about scarce resources has consequences for different groups.')), nextBtn('Finish ✓', () => NF.UI.closeTop()));
         sh.finish(score);
       };
       phase1();
